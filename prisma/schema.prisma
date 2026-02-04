@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Trade {
+  id               Int      @id @default(autoincrement())
+
+  // 1) Context
+  timeframe        String
+  trendAssessment  String
+  marketPhase      String
+
+  // 1.5) Trade details
+  symbol           String
+  direction        String
+  result           String
+  entryTime        DateTime
+  exitTime         DateTime @default(now())
+  pnlAmount        Float
+
+  // 2) Setup
+  setupType        String
+  setupQuality     String
+  entryType        String
+
+  // 3) Risk & Management
+  entryPoint       Float    @default(0)
+  closingPoint     Float    @default(0)
+  slPoint          Float    @default(0)
+  tpPoint          Float    @default(0)
+  actualRMultiple  Float    @default(0)
+  plannedRMultiple Float    @default(0)
+
+  // 4) Subjective Judgment
+  entryReason      String
+  expectedScenario String
+  confidenceLevel  Int
+
+  // 5) Others
+  screenshotUrl    String
+  createdAt        DateTime @default(now())
+}
+
