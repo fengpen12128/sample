@@ -79,9 +79,9 @@ type TradeFormValues = z.infer<typeof tradeFormSchema>;
 
 export type TradeEditable = {
   id: number;
-  timeframe: string;
-  trendAssessment: string;
-  marketPhase: string;
+  timeframe: string | null;
+  trendAssessment: string | null;
+  marketPhase: string | null;
   symbol: string;
   direction: string;
   result: string;
@@ -89,20 +89,20 @@ export type TradeEditable = {
   entryTime: Date;
   exitTime: Date;
   pnlAmount: number;
-  setupType: string;
-  setupQuality: string;
-  entryType: string;
+  setupType: string | null;
+  setupQuality: string | null;
+  entryType: string | null;
   entryPoint: number;
   closingPoint: number;
-  slPoint: number;
-  tpPoint: number;
-  actualRMultiple: number;
-  plannedRMultiple: number;
-  earlyExit: boolean;
-  entryReason: string;
-  expectedScenario: string;
-  confidenceLevel: number;
-  screenshotUrl: string;
+  slPoint: number | null;
+  tpPoint: number | null;
+  actualRMultiple: number | null;
+  plannedRMultiple: number | null;
+  earlyExit: boolean | null;
+  entryReason: string | null;
+  expectedScenario: string | null;
+  confidenceLevel: number | null;
+  screenshotUrl: string | null;
 };
 
 function ensureOption(options: string[], value: string | undefined) {
@@ -146,12 +146,16 @@ function TradeFormDialog({
     exitTime: initial?.exitTime
       ? format(new Date(initial.exitTime), "yyyy-MM-dd HH:mm:ss")
       : "",
-    timeframe: initial?.timeframe ?? "5m",
-    trendAssessment: initial?.trendAssessment ?? "Weak Bull Trend Channel",
-    marketPhase: initial?.marketPhase ?? "Pullback",
-    setupType: initial?.setupType ?? "H2",
-    entryType: initial?.entryType ?? "stop",
-    confidenceLevel: String(initial?.confidenceLevel ?? 3),
+    timeframe: initial ? initial.timeframe ?? "" : "5m",
+    trendAssessment: initial ? initial.trendAssessment ?? "" : "Weak Bull Trend Channel",
+    marketPhase: initial ? initial.marketPhase ?? "" : "Pullback",
+    setupType: initial ? initial.setupType ?? "" : "H2",
+    entryType: initial ? initial.entryType ?? "" : "stop",
+    confidenceLevel: initial
+      ? initial.confidenceLevel !== null && initial.confidenceLevel !== undefined
+        ? String(initial.confidenceLevel)
+        : ""
+      : "3",
     entryPoint: initial?.entryPoint !== undefined ? String(initial.entryPoint) : "",
     closingPoint: initial?.closingPoint !== undefined ? String(initial.closingPoint) : "",
     slPoint: initial?.slPoint !== undefined ? String(initial.slPoint) : "",
@@ -341,7 +345,7 @@ function TradeFormDialog({
 
   const timeframeOptions = ensureOption(
     ["5m", "15m", "1h", "4h", "1D"],
-    initial?.timeframe,
+    initial?.timeframe ?? undefined,
   );
   const tradeModeOptions = ensureOption(
     ["live", "demo"],
@@ -357,7 +361,7 @@ function TradeFormDialog({
       "Trading Range",
       "Breakout Mode",
     ],
-    initial?.trendAssessment,
+    initial?.trendAssessment ?? undefined,
   );
   const marketPhaseOptions = ensureOption(
     [
@@ -367,11 +371,11 @@ function TradeFormDialog({
       "Failed Breakout",
       "Exhaustion",
     ],
-    initial?.marketPhase,
+    initial?.marketPhase ?? undefined,
   );
   const setupTypeOptions = ensureOption(
     ["H2", "L2", "Wedge"],
-    initial?.setupType,
+    initial?.setupType ?? undefined,
   );
 
   const normalizeDateTimeInput = (value: string) => {
@@ -402,7 +406,7 @@ function TradeFormDialog({
     formData.append("trendAssessment", data.trendAssessment ?? "");
     formData.append("marketPhase", data.marketPhase ?? "");
     formData.append("setupType", data.setupType ?? "");
-    formData.append("setupQuality", initial?.setupQuality ?? "acceptable");
+    formData.append("setupQuality", initial?.setupQuality ?? "");
     formData.append("entryType", data.entryType ?? "");
     formData.append("confidenceLevel", data.confidenceLevel ?? "");
     formData.append("entryPoint", data.entryPoint);

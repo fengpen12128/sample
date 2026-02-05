@@ -29,22 +29,22 @@ export function buildTradeMarkdown(
     "",
     "## Trade Details",
     `- PnL amount: ${formatMaybeNumber(trade.pnlAmount)}`,
-    `- Symbol: ${trade.symbol}`,
-    `- Direction: ${trade.direction}`,
-    `- Result: ${trade.result}`,
-    `- Trade mode: ${trade.tradeMode}`,
+    `- Symbol: ${formatMaybeString(trade.symbol)}`,
+    `- Direction: ${formatMaybeString(trade.direction)}`,
+    `- Result: ${formatMaybeString(trade.result)}`,
+    `- Trade mode: ${formatMaybeString(trade.tradeMode)}`,
     `- Entry time: ${entryTime}`,
     `- Exit time: ${exitTime}`,
     "",
     "## Context",
-    `- Timeframe: ${trade.timeframe}`,
-    `- Trend assessment: ${trade.trendAssessment}`,
-    `- Market phase: ${trade.marketPhase}`,
+    `- Timeframe: ${formatMaybeString(trade.timeframe)}`,
+    `- Trend assessment: ${formatMaybeString(trade.trendAssessment)}`,
+    `- Market phase: ${formatMaybeString(trade.marketPhase)}`,
     "",
     "## Setup",
-    `- Setup type: ${trade.setupType}`,
-    `- Entry type: ${trade.entryType}`,
-    `- Confidence (1–5): ${trade.confidenceLevel}`,
+    `- Setup type: ${formatMaybeString(trade.setupType)}`,
+    `- Entry type: ${formatMaybeString(trade.entryType)}`,
+    `- Confidence (1–5): ${formatMaybeNumber(trade.confidenceLevel)}`,
     "",
     "## Risk & Management",
     `- Entry point: ${formatMaybeNumber(trade.entryPoint)}`,
@@ -53,7 +53,7 @@ export function buildTradeMarkdown(
     `- TP point: ${formatMaybeNumber(trade.tpPoint)}`,
     `- Actual R multiple: ${formatMaybeR(trade.actualRMultiple)}`,
     `- Planned R multiple: ${formatMaybeR(trade.plannedRMultiple)}`,
-    `- Early exit: ${trade.earlyExit ? "Yes" : "No"}`,
+    `- Early exit: ${formatMaybeBoolean(trade.earlyExit)}`,
     "",
     "## Post-trade Review",
     trade.entryReason || "",
@@ -88,6 +88,16 @@ function formatMaybeDate(value: Date | string, pattern: string) {
 function formatMaybeNumber(value: number | null | undefined) {
   if (value === null || value === undefined) return "";
   return Number.isFinite(value) ? String(value) : "";
+}
+
+function formatMaybeBoolean(value: boolean | null | undefined) {
+  if (value === null || value === undefined) return "";
+  return value ? "Yes" : "No";
+}
+
+function formatMaybeString(value: string | null | undefined) {
+  if (!value) return "";
+  return value;
 }
 
 function formatMaybeR(value: number | null | undefined) {

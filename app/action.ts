@@ -2,8 +2,6 @@
 
 import { redirect } from "next/navigation";
 
-import type { Prisma } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
 
 function requiredInt(formData: FormData, key: string) {
@@ -19,6 +17,11 @@ function requiredString(formData: FormData, key: string) {
   return v.length ? v : null;
 }
 
+function optionalString(formData: FormData, key: string) {
+  const v = String(formData.get(key) ?? "").trim();
+  return v.length ? v : null;
+}
+
 function requiredNumber(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
   if (!raw) return null;
@@ -26,7 +29,22 @@ function requiredNumber(formData: FormData, key: string) {
   return Number.isFinite(n) ? n : null;
 }
 
+function optionalNumber(formData: FormData, key: string) {
+  const raw = String(formData.get(key) ?? "").trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 function requiredBoolean(formData: FormData, key: string) {
+  const raw = String(formData.get(key) ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return null;
+}
+
+function optionalBoolean(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim().toLowerCase();
   if (!raw) return null;
   if (raw === "true") return true;
@@ -61,27 +79,27 @@ function computeRMultiple(entry: number, sl: number, target: number) {
 }
 
 function parseTradeInput(formData: FormData) {
-  const timeframe = requiredString(formData, "timeframe");
-  const trendAssessment = requiredString(formData, "trendAssessment");
-  const marketPhase = requiredString(formData, "marketPhase");
+  const timeframe = optionalString(formData, "timeframe");
+  const trendAssessment = optionalString(formData, "trendAssessment");
+  const marketPhase = optionalString(formData, "marketPhase");
 
   const symbol = requiredString(formData, "symbol");
   const direction = requiredString(formData, "direction");
   const result = requiredString(formData, "result");
-  const tradeMode = requiredString(formData, "tradeMode");
+  const tradeMode = requiredString(formData, "tradeMode") ?? "live";
   const entryTime = requiredDate(formData, "entryTime");
   const exitTime = requiredDate(formData, "exitTime");
   const pnlAmount = requiredNumber(formData, "pnlAmount");
 
-  const setupType = requiredString(formData, "setupType");
-  const setupQuality = requiredString(formData, "setupQuality");
-  const entryType = requiredString(formData, "entryType");
+  const setupType = optionalString(formData, "setupType");
+  const setupQuality = optionalString(formData, "setupQuality");
+  const entryType = optionalString(formData, "entryType");
 
   const entryPoint = requiredNumber(formData, "entryPoint");
   const closingPoint = requiredNumber(formData, "closingPoint");
-  const slPoint = requiredNumber(formData, "slPoint");
-  const tpPoint = requiredNumber(formData, "tpPoint");
-  const earlyExit = requiredBoolean(formData, "earlyExit");
+  const slPoint = optionalNumber(formData, "slPoint");
+  const tpPoint = optionalNumber(formData, "tpPoint");
+  const earlyExit = optionalBoolean(formData, "earlyExit");
   const actualRMultiple =
     entryPoint !== null && slPoint !== null && closingPoint !== null
       ? computeRMultiple(entryPoint, slPoint, closingPoint)
@@ -91,16 +109,13 @@ function parseTradeInput(formData: FormData) {
       ? computeRMultiple(entryPoint, slPoint, tpPoint)
       : null;
 
-  const entryReason = requiredString(formData, "entryReason");
-  const expectedScenario = requiredString(formData, "expectedScenario");
-  const confidenceLevel = requiredNumber(formData, "confidenceLevel");
+  const entryReason = optionalString(formData, "entryReason");
+  const expectedScenario = optionalString(formData, "expectedScenario");
+  const confidenceLevel = optionalNumber(formData, "confidenceLevel");
 
-  const screenshotUrl = String(formData.get("screenshotUrl") ?? "").trim();
+  const screenshotUrl = optionalString(formData, "screenshotUrl");
 
   const ok =
-    timeframe &&
-    trendAssessment &&
-    marketPhase &&
     symbol &&
     direction &&
     result &&
@@ -108,19 +123,8 @@ function parseTradeInput(formData: FormData) {
     entryTime &&
     exitTime &&
     pnlAmount !== null &&
-    setupType &&
-    setupQuality &&
-    entryType &&
     entryPoint !== null &&
-    closingPoint !== null &&
-    slPoint !== null &&
-    tpPoint !== null &&
-    actualRMultiple !== null &&
-    plannedRMultiple !== null &&
-    earlyExit !== null &&
-    entryReason &&
-    expectedScenario &&
-    confidenceLevel !== null;
+    closingPoint !== null;
 
   if (!ok) {
     return {
@@ -129,7 +133,12 @@ function parseTradeInput(formData: FormData) {
     };
   }
 
-  if (confidenceLevel < 1 || confidenceLevel > 5) {
+  if (
+    confidenceLevel !== null &&
+    (!Number.isInteger(confidenceLevel) ||
+      confidenceLevel < 1 ||
+      confidenceLevel > 5)
+  ) {
     return { ok: false as const, error: "confidenceLevel must be 1–5" };
   }
 
@@ -158,7 +167,7 @@ function parseTradeInput(formData: FormData) {
       earlyExit,
       entryReason,
       expectedScenario,
-      confidenceLevel: Math.trunc(confidenceLevel),
+      confidenceLevel: confidenceLevel !== null ? Math.trunc(confidenceLevel) : null,
       screenshotUrl,
     },
   };
@@ -171,7 +180,7 @@ export async function createTrade(formData: FormData) {
   }
 
   await prisma.trade.create({
-    data: parsed.data as unknown as Prisma.TradeUncheckedCreateInput,
+    data: parsed.data,
   });
   redirect("/");
 }
@@ -185,7 +194,7 @@ export async function updateTrade(formData: FormData) {
 
   await prisma.trade.update({
     where: { id },
-    data: parsed.data as unknown as Prisma.TradeUncheckedUpdateInput,
+    data: parsed.data,
   });
 
   redirect("/");
