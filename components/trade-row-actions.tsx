@@ -53,12 +53,14 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
           </DialogTrigger>
           <DialogContent className="!w-[60vw] !max-w-none max-h-[85vh] flex flex-col">
             <DialogHeader>
-              <DialogTitle>Markdown 预览</DialogTitle>
+              <DialogTitle>Markdown Preview</DialogTitle>
             </DialogHeader>
             <div className="scrollbar-none -mr-4 flex-1 overflow-y-auto pr-4">
               <div className="flex flex-col gap-6 text-sm">
                 <section className="space-y-3">
-                  <h3 className="text-base font-semibold text-zinc-200">渲染预览</h3>
+                  <h3 className="text-base font-semibold text-zinc-200">
+                    Rendered Preview
+                  </h3>
                   <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
                     <div className="prose prose-invert max-w-none">
                       <ReactMarkdown>{markdown}</ReactMarkdown>
@@ -66,7 +68,9 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
                   </div>
                 </section>
                 <section className="space-y-3">
-                  <h3 className="text-base font-semibold text-zinc-200">Markdown 文本</h3>
+                  <h3 className="text-base font-semibold text-zinc-200">
+                    Markdown Text
+                  </h3>
                   <pre className="whitespace-pre-wrap rounded-md border border-zinc-800 bg-black/30 p-4 text-xs text-zinc-100">
                     {markdown}
                   </pre>

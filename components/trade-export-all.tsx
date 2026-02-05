@@ -20,7 +20,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
 
   const handleExport = async () => {
     if (!trades.length) {
-      toast.info("没有可导出的数据");
+      toast.info("No data to export.");
       return;
     }
 
@@ -29,7 +29,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
       const zip = new JSZip();
       const imagesFolder = zip.folder("images");
       if (!imagesFolder) {
-        throw new Error("无法创建图片目录");
+        throw new Error("Unable to create images folder.");
       }
 
       for (const trade of trades) {
@@ -44,7 +44,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
             imagesFolder.file(filename, blob);
             imagePath = `images/${filename}`;
           } catch (error) {
-            toast.error(`截图下载失败: #${trade.id}`);
+            toast.error(`Screenshot download failed: #${trade.id}`);
           }
         }
 
@@ -57,9 +57,9 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
       const archive = await zip.generateAsync({ type: "blob" });
       const archiveName = `trades-${format(new Date(), "yyyyMMdd-HHmmss")}.zip`;
       downloadBlob(archive, archiveName);
-      toast.success("导出完成");
+      toast.success("Export complete.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "导出失败");
+      toast.error(error instanceof Error ? error.message : "Export failed.");
     } finally {
       setExporting(false);
     }
@@ -67,7 +67,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
 
   return (
     <Button type="button" size="sm" onClick={handleExport} disabled={exporting}>
-      {exporting ? "导出中..." : "导出全部"}
+      {exporting ? "Exporting..." : "Export All"}
     </Button>
   );
 }
@@ -75,7 +75,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
 async function downloadImage(url: string, id: number, symbol: string) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`下载失败: ${response.status}`);
+    throw new Error(`Download failed: ${response.status}`);
   }
 
   const blob = await response.blob();

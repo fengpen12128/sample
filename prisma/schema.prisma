@@ -20,6 +20,7 @@ model Trade {
   symbol           String
   direction        String
   result           String
+  tradeMode        String   @default("live")
   entryTime        DateTime
   exitTime         DateTime @default(now())
   pnlAmount        Float
@@ -36,6 +37,7 @@ model Trade {
   tpPoint          Float    @default(0)
   actualRMultiple  Float    @default(0)
   plannedRMultiple Float    @default(0)
+  earlyExit        Boolean  @default(false)
 
   // 4) Subjective Judgment
   entryReason      String

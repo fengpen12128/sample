@@ -1,0 +1,22 @@
+---
+description: Enforce English-only content
+alwaysApply: true
+---
+
+# English-Only Content
+
+This project currently supports only English. When adding or editing content:
+
+- Use English for all user-facing strings (UI labels, buttons, errors, toasts).
+- Use English for comments and documentation in the codebase.
+- Avoid adding non-English copy or translations.
+
+## Examples
+
+```typescript
+// BAD: non-English UI copy
+toast.error("Erreur de sauvegarde");
+
+// GOOD: English-only UI copy
+toast.error("Save failed.");
+```

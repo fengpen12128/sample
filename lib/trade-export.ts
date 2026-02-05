@@ -25,13 +25,14 @@ export function buildTradeMarkdown(
   const screenshotUrlLine = !imagePath && trade.screenshotUrl ? trade.screenshotUrl : "";
 
   return [
-    "# Trade 记录",
+    "# Trade Record",
     "",
     "## Trade Details",
     `- PnL amount: ${formatMaybeNumber(trade.pnlAmount)}`,
     `- Symbol: ${trade.symbol}`,
     `- Direction: ${trade.direction}`,
     `- Result: ${trade.result}`,
+    `- Trade mode: ${trade.tradeMode}`,
     `- Entry time: ${entryTime}`,
     `- Exit time: ${exitTime}`,
     "",
@@ -52,6 +53,7 @@ export function buildTradeMarkdown(
     `- TP point: ${formatMaybeNumber(trade.tpPoint)}`,
     `- Actual R multiple: ${formatMaybeR(trade.actualRMultiple)}`,
     `- Planned R multiple: ${formatMaybeR(trade.plannedRMultiple)}`,
+    `- Early exit: ${trade.earlyExit ? "Yes" : "No"}`,
     "",
     "## Post-trade Review",
     trade.entryReason || "",

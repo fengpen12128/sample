@@ -5,14 +5,13 @@ import type { PutBlobResult } from "@vercel/blob";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { ChevronDownIcon, LoaderIcon } from "lucide-react";
+import { LoaderIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { createTrade, updateTrade } from "@/app/action";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogClose,
@@ -31,7 +30,6 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -47,21 +45,33 @@ const tradeFormSchema = z.object({
   symbol: z.string().min(1, "Symbol is required"),
   direction: z.string().min(1, "Direction is required"),
   result: z.string().min(1, "Result is required"),
-  entryDate: z.date({ error: "Entry date is required" }),
-  entryTime: z.string().min(1, "Entry time is required"),
-  exitDate: z.date({ error: "Exit date is required" }),
-  exitTime: z.string().min(1, "Exit time is required"),
-  timeframe: z.string().min(1, "Timeframe is required"),
-  trendAssessment: z.string().min(1, "Trend assessment is required"),
-  marketPhase: z.string().min(1, "Market phase is required"),
-  setupType: z.string().min(1, "Setup type is required"),
-  entryType: z.string().min(1, "Entry type is required"),
-  confidenceLevel: z.string().min(1, "Confidence is required"),
+  tradeMode: z.string().min(1, "Trade mode is required"),
+  entryTime: z
+    .string()
+    .min(1, "Entry time is required")
+    .refine(
+      (value) => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(value.trim()),
+      "Use format YYYY-MM-DD HH:mm:ss",
+    ),
+  exitTime: z
+    .string()
+    .min(1, "Exit time is required")
+    .refine(
+      (value) => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(value.trim()),
+      "Use format YYYY-MM-DD HH:mm:ss",
+    ),
+  earlyExit: z.boolean(),
+  timeframe: z.string().optional(),
+  trendAssessment: z.string().optional(),
+  marketPhase: z.string().optional(),
+  setupType: z.string().optional(),
+  entryType: z.string().optional(),
+  confidenceLevel: z.string().optional(),
   entryPoint: z.string().min(1, "Entry point is required"),
   closingPoint: z.string().min(1, "Closing point is required"),
-  slPoint: z.string().min(1, "SL point is required"),
-  tpPoint: z.string().min(1, "TP point is required"),
-  entryReason: z.string().min(1, "Entry reason is required"),
+  slPoint: z.string().optional(),
+  tpPoint: z.string().optional(),
+  entryReason: z.string().optional(),
   screenshotUrl: z.string().optional(),
 });
 
@@ -75,6 +85,7 @@ export type TradeEditable = {
   symbol: string;
   direction: string;
   result: string;
+  tradeMode: string;
   entryTime: Date;
   exitTime: Date;
   pnlAmount: number;
@@ -87,6 +98,7 @@ export type TradeEditable = {
   tpPoint: number;
   actualRMultiple: number;
   plannedRMultiple: number;
+  earlyExit: boolean;
   entryReason: string;
   expectedScenario: string;
   confidenceLevel: number;
@@ -112,24 +124,28 @@ function TradeFormDialog({
   initial?: TradeEditable;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [entryOpen, setEntryOpen] = React.useState(false);
-  const [exitOpen, setExitOpen] = React.useState(false);
   const [uploadingScreenshot, setUploadingScreenshot] = React.useState(false);
   const [screenshotError, setScreenshotError] = React.useState<string | null>(null);
+  const [aiDialogOpen, setAiDialogOpen] = React.useState(false);
+  const [aiFile, setAiFile] = React.useState<File | null>(null);
+  const [aiPreviewUrl, setAiPreviewUrl] = React.useState<string | null>(null);
+  const [aiParsing, setAiParsing] = React.useState(false);
+  const [aiError, setAiError] = React.useState<string | null>(null);
 
   const controlClassName = "h-10 text-sm";
   const selectTriggerClassName = "h-10 w-full text-sm";
-  const dateButtonClassName = "h-10 w-full justify-between font-normal text-sm";
-
   const getDefaultValues = React.useCallback((): TradeFormValues => ({
     pnlAmount: initial?.pnlAmount !== undefined ? String(initial.pnlAmount) : "",
     symbol: initial?.symbol ?? "XAUUSD",
     direction: initial?.direction ?? "long",
     result: initial?.result ?? "win",
-    entryDate: initial?.entryTime ? new Date(initial.entryTime) : undefined as unknown as Date,
-    entryTime: initial?.entryTime ? format(new Date(initial.entryTime), "HH:mm:ss") : "00:00:00",
-    exitDate: initial?.exitTime ? new Date(initial.exitTime) : undefined as unknown as Date,
-    exitTime: initial?.exitTime ? format(new Date(initial.exitTime), "HH:mm:ss") : "00:00:00",
+    tradeMode: initial?.tradeMode ?? "live",
+    entryTime: initial?.entryTime
+      ? format(new Date(initial.entryTime), "yyyy-MM-dd HH:mm:ss")
+      : "",
+    exitTime: initial?.exitTime
+      ? format(new Date(initial.exitTime), "yyyy-MM-dd HH:mm:ss")
+      : "",
     timeframe: initial?.timeframe ?? "5m",
     trendAssessment: initial?.trendAssessment ?? "Weak Bull Trend Channel",
     marketPhase: initial?.marketPhase ?? "Pullback",
@@ -140,6 +156,7 @@ function TradeFormDialog({
     closingPoint: initial?.closingPoint !== undefined ? String(initial.closingPoint) : "",
     slPoint: initial?.slPoint !== undefined ? String(initial.slPoint) : "",
     tpPoint: initial?.tpPoint !== undefined ? String(initial.tpPoint) : "",
+    earlyExit: initial?.earlyExit ?? false,
     entryReason: initial?.entryReason ?? "",
     screenshotUrl: initial?.screenshotUrl ?? "",
   }), [initial]);
@@ -168,6 +185,18 @@ function TradeFormDialog({
     }
   }, [open, reset, getDefaultValues]);
 
+  React.useEffect(() => {
+    if (!aiFile) {
+      setAiPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(aiFile);
+    setAiPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [aiFile]);
+
   const handleScreenshotUpload = async (file: File) => {
     setUploadingScreenshot(true);
     setScreenshotError(null);
@@ -188,8 +217,102 @@ function TradeFormDialog({
     }
   };
 
-  const toNumber = (value: string) => {
-    if (!value.trim()) return null;
+  const resetAiDialog = () => {
+    setAiFile(null);
+    setAiPreviewUrl(null);
+    setAiParsing(false);
+    setAiError(null);
+  };
+
+  const applyParsedFields = (fields: Record<string, unknown>) => {
+    const parsedFields: Array<keyof TradeFormValues> = [
+      "pnlAmount",
+      "symbol",
+      "direction",
+      "result",
+      "tradeMode",
+      "entryTime",
+      "exitTime",
+      "timeframe",
+      "trendAssessment",
+      "marketPhase",
+      "setupType",
+      "entryType",
+      "confidenceLevel",
+      "entryPoint",
+      "closingPoint",
+      "slPoint",
+      "tpPoint",
+      "entryReason",
+      "earlyExit",
+    ];
+
+    parsedFields.forEach((key) => {
+      const value = fields[key];
+      if (key === "earlyExit") {
+        if (typeof value === "boolean") {
+          setValue(key, value, { shouldDirty: true, shouldValidate: true });
+          return;
+        }
+        if (typeof value === "string") {
+          const normalized = value.trim().toLowerCase();
+          if (normalized === "true" || normalized === "false") {
+            setValue(key, normalized === "true", { shouldDirty: true, shouldValidate: true });
+            return;
+          }
+          setValue(key, false, { shouldDirty: true, shouldValidate: true });
+        }
+        return;
+      }
+
+      if (typeof value === "string") {
+        setValue(key, value, { shouldDirty: true, shouldValidate: true });
+        return;
+      }
+      if (typeof value === "number") {
+        setValue(key, String(value), { shouldDirty: true, shouldValidate: true });
+        return;
+      }
+      if (value === null || value === undefined) {
+        setValue(key, "", { shouldDirty: true, shouldValidate: true });
+      }
+    });
+  };
+
+  const handleAiParse = async () => {
+    if (!aiFile) {
+      setAiError("Please select an image first.");
+      return;
+    }
+    setAiParsing(true);
+    setAiError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", aiFile);
+      const response = await fetch("/api/trades/parse-image", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as { data?: Record<string, unknown>; error?: string };
+      if (!response.ok) {
+        throw new Error(result?.error ?? "Image parsing failed. Please try again.");
+      }
+      if (!result.data) {
+        throw new Error("Image parsing failed. Please try again.");
+      }
+      applyParsedFields(result.data);
+      toast.success("Image parsed. Form updated.");
+      setAiDialogOpen(false);
+      resetAiDialog();
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "Image parsing failed. Please try again.");
+    } finally {
+      setAiParsing(false);
+    }
+  };
+
+  const toNumber = (value: string | undefined) => {
+    if (!value || !value.trim()) return null;
     const n = Number(value);
     return Number.isFinite(n) ? n : null;
   };
@@ -220,6 +343,10 @@ function TradeFormDialog({
     ["5m", "15m", "1h", "4h", "1D"],
     initial?.timeframe,
   );
+  const tradeModeOptions = ensureOption(
+    ["live", "demo"],
+    initial?.tradeMode,
+  );
   const trendOptions = ensureOption(
     [
       "Strong Bull Trend",
@@ -247,6 +374,16 @@ function TradeFormDialog({
     initial?.setupType,
   );
 
+  const normalizeDateTimeInput = (value: string) => {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(trimmed)) {
+      return `${trimmed}:00`;
+    }
+    return trimmed;
+  };
+
+  const toTimestampInput = (value: string) => normalizeDateTimeInput(value).replace(" ", "T");
+
   const onSubmit = async (data: TradeFormValues) => {
     const formData = new FormData();
 
@@ -258,23 +395,25 @@ function TradeFormDialog({
     formData.append("symbol", data.symbol);
     formData.append("direction", data.direction);
     formData.append("result", data.result);
-    formData.append("entryTime", `${format(data.entryDate, "yyyy-MM-dd")}T${data.entryTime}`);
-    formData.append("exitTime", `${format(data.exitDate, "yyyy-MM-dd")}T${data.exitTime}`);
-    formData.append("timeframe", data.timeframe);
-    formData.append("trendAssessment", data.trendAssessment);
-    formData.append("marketPhase", data.marketPhase);
-    formData.append("setupType", data.setupType);
+    formData.append("tradeMode", data.tradeMode);
+    formData.append("entryTime", toTimestampInput(data.entryTime));
+    formData.append("exitTime", toTimestampInput(data.exitTime));
+    formData.append("timeframe", data.timeframe ?? "");
+    formData.append("trendAssessment", data.trendAssessment ?? "");
+    formData.append("marketPhase", data.marketPhase ?? "");
+    formData.append("setupType", data.setupType ?? "");
     formData.append("setupQuality", initial?.setupQuality ?? "acceptable");
-    formData.append("entryType", data.entryType);
-    formData.append("confidenceLevel", data.confidenceLevel);
+    formData.append("entryType", data.entryType ?? "");
+    formData.append("confidenceLevel", data.confidenceLevel ?? "");
     formData.append("entryPoint", data.entryPoint);
     formData.append("closingPoint", data.closingPoint);
-    formData.append("slPoint", data.slPoint);
-    formData.append("tpPoint", data.tpPoint);
+    formData.append("slPoint", data.slPoint ?? "");
+    formData.append("tpPoint", data.tpPoint ?? "");
     formData.append("actualRMultiple", computedActual);
     formData.append("plannedRMultiple", computedPlanned);
-    formData.append("entryReason", data.entryReason);
-    formData.append("expectedScenario", data.entryReason);
+    formData.append("earlyExit", String(data.earlyExit));
+    formData.append("entryReason", data.entryReason ?? "");
+    formData.append("expectedScenario", data.entryReason ?? "");
     formData.append("screenshotUrl", data.screenshotUrl ?? "");
 
     if (mode === "edit") {
@@ -291,31 +430,34 @@ function TradeFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="!w-[50vw] !max-w-none max-h-[90vh] flex flex-col" showCloseButton={false}>
-        <DialogHeader>
-          <div>
-            <DialogTitle>{title}</DialogTitle>
-          </div>
-          <DialogClose asChild>
-            <Button type="button" variant="ghost" size="sm" aria-label="Close">
-              Close
-            </Button>
-          </DialogClose>
-        </DialogHeader>
+        <DialogContent className="!w-[50vw] !max-w-none max-h-[90vh] flex flex-col" showCloseButton={false}>
+          <DialogHeader>
+            <div>
+              <DialogTitle>{title}</DialogTitle>
+            </div>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost" size="sm" aria-label="Close">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogHeader>
 
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={handleSubmit(onSubmit, onError)}
-          noValidate
-        >
-          <div className="scrollbar-none -mr-4 min-h-0 flex-1 overflow-y-auto pr-4">
-            <div className="flex flex-col gap-4">
-              <FieldSet>
-                <FieldLegend>Trade Details</FieldLegend>
-                <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={handleSubmit(onSubmit, onError)}
+            noValidate
+          >
+            <div className="scrollbar-none -mr-4 min-h-0 flex-1 overflow-y-auto pr-4">
+              <div className="flex flex-col gap-4">
+                <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                  <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                    Trade Details
+                  </FieldLegend>
+                    <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-4">
                   <Field>
                     <FieldLabel htmlFor="pnlAmount">PnL amount</FieldLabel>
                     <Controller
@@ -402,130 +544,72 @@ function TradeFormDialog({
                     {errors.result ? <FieldError>{errors.result.message}</FieldError> : null}
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel>Entry time</FieldLabel>
-                    <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="entry-date">Date</FieldLabel>
-                        <Controller
-                          name="entryDate"
-                          control={control}
-                          render={({ field }) => (
-                            <Popover open={entryOpen} onOpenChange={setEntryOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  id="entry-date"
-                                  className={dateButtonClassName}
-                                >
-                                  {field.value ? format(field.value, "yyyy-MM-dd") : "Select date"}
-                                  <ChevronDownIcon />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto overflow-hidden p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  captionLayout="dropdown"
-                                  defaultMonth={field.value}
-                                  onSelect={(date) => {
-                                    field.onChange(date);
-                                    setEntryOpen(false);
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          )}
+                    <FieldLabel htmlFor="entry-time">Entry time</FieldLabel>
+                    <Controller
+                      name="entryTime"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          id="entry-time"
+                          type="text"
+                          placeholder="YYYY-MM-DD HH:mm:ss"
+                          className={controlClassName}
+                          {...field}
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="entry-time">Time</FieldLabel>
-                        <Controller
-                          name="entryTime"
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              type="time"
-                              id="entry-time"
-                              step="1"
-                              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                              {...field}
-                            />
-                          )}
-                        />
-                      </Field>
-                    </FieldGroup>
-                    {errors.entryDate ? <FieldError>{errors.entryDate.message}</FieldError> : null}
+                      )}
+                    />
                     {errors.entryTime ? <FieldError>{errors.entryTime.message}</FieldError> : null}
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel>Exit time</FieldLabel>
-                    <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="exit-date">Date</FieldLabel>
-                        <Controller
-                          name="exitDate"
-                          control={control}
-                          render={({ field }) => (
-                            <Popover open={exitOpen} onOpenChange={setExitOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  id="exit-date"
-                                  className={dateButtonClassName}
-                                >
-                                  {field.value ? format(field.value, "yyyy-MM-dd") : "Select date"}
-                                  <ChevronDownIcon />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto overflow-hidden p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  captionLayout="dropdown"
-                                  defaultMonth={field.value}
-                                  onSelect={(date) => {
-                                    field.onChange(date);
-                                    setExitOpen(false);
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          )}
+                    <FieldLabel htmlFor="exit-time">Exit time</FieldLabel>
+                    <Controller
+                      name="exitTime"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          id="exit-time"
+                          type="text"
+                          placeholder="YYYY-MM-DD HH:mm:ss"
+                          className={controlClassName}
+                          {...field}
                         />
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="exit-time">Time</FieldLabel>
-                        <Controller
-                          name="exitTime"
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              type="time"
-                              id="exit-time"
-                              step="1"
-                              className={`bg-background appearance-none ${controlClassName} [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none`}
-                              {...field}
-                            />
-                          )}
-                        />
-                      </Field>
-                    </FieldGroup>
-                    {errors.exitDate ? <FieldError>{errors.exitDate.message}</FieldError> : null}
+                      )}
+                    />
                     {errors.exitTime ? <FieldError>{errors.exitTime.message}</FieldError> : null}
                   </Field>
-                </FieldGroup>
+                  <Field className="md:col-span-4">
+                    <FieldLabel htmlFor="tradeMode">Trade mode</FieldLabel>
+                    <Controller
+                      name="tradeMode"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger
+                            id="tradeMode"
+                            className={selectTriggerClassName}
+                            onBlur={field.onBlur}
+                          >
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tradeModeOptions.map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.tradeMode ? <FieldError>{errors.tradeMode.message}</FieldError> : null}
+                  </Field>
+                  </FieldGroup>
               </FieldSet>
-              <FieldSet>
-                <FieldLegend>Context</FieldLegend>
-                <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                  Context
+                </FieldLegend>
+                  <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <Field>
                     <FieldLabel htmlFor="timeframe">Timeframe</FieldLabel>
                     <Controller
@@ -608,12 +692,14 @@ function TradeFormDialog({
                     />
                     {errors.marketPhase ? <FieldError>{errors.marketPhase.message}</FieldError> : null}
                   </Field>
-                </FieldGroup>
+                  </FieldGroup>
               </FieldSet>
 
-              <FieldSet>
-                <FieldLegend>Setup</FieldLegend>
-                <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                  Setup
+                </FieldLegend>
+                  <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <Field>
                     <FieldLabel htmlFor="setupType">Setup type</FieldLabel>
                     <Controller
@@ -694,12 +780,14 @@ function TradeFormDialog({
                       <FieldError>{errors.confidenceLevel.message}</FieldError>
                     ) : null}
                   </Field>
-                </FieldGroup>
+                  </FieldGroup>
               </FieldSet>
 
-              <FieldSet>
-                <FieldLegend>Risk & Management</FieldLegend>
-                <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                  Risk & Management
+                </FieldLegend>
+                  <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <Field>
                     <FieldLabel htmlFor="entryPoint">Entry point</FieldLabel>
                     <Controller
@@ -792,12 +880,35 @@ function TradeFormDialog({
                       readOnly
                     />
                   </Field>
-                </FieldGroup>
+                  <Field className="md:col-span-3">
+                    <Controller
+                      name="earlyExit"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <input
+                            id="early-exit"
+                            type="checkbox"
+                            className="h-4 w-4 rounded border border-zinc-700 bg-transparent text-emerald-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                            checked={field.value}
+                            onChange={(event) => field.onChange(event.target.checked)}
+                            onBlur={field.onBlur}
+                          />
+                          <label htmlFor="early-exit" className="text-xs text-zinc-200">
+                            Early exit
+                          </label>
+                        </div>
+                      )}
+                    />
+                  </Field>
+                  </FieldGroup>
               </FieldSet>
 
-              <FieldSet>
-                <FieldLegend>Post-trade Review</FieldLegend>
-                <FieldGroup className="grid grid-cols-1 gap-4">
+              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                  Post-trade Review
+                </FieldLegend>
+                  <FieldGroup className="grid grid-cols-1 gap-4">
                   <Field>
                     <Controller
                       name="entryReason"
@@ -812,12 +923,14 @@ function TradeFormDialog({
                     />
                     {errors.entryReason ? <FieldError>{errors.entryReason.message}</FieldError> : null}
                   </Field>
-                </FieldGroup>
+                  </FieldGroup>
               </FieldSet>
 
-              <FieldSet>
-                <FieldLegend>Screenshot</FieldLegend>
-                <FieldGroup>
+              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+                  Screenshot
+                </FieldLegend>
+                  <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="screenshot-upload">Upload screenshot</FieldLabel>
                     <input
@@ -857,20 +970,98 @@ function TradeFormDialog({
                       />
                     ) : null}
                   </Field>
-                </FieldGroup>
+                  </FieldGroup>
               </FieldSet>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2 border-t border-zinc-800 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetAiDialog();
+                  setAiDialogOpen(true);
+                }}
+              >
+                Add image
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <LoaderIcon className="animate-spin" />}
+                {submitLabel}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={aiDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setAiDialogOpen(nextOpen);
+          if (!nextOpen) {
+            resetAiDialog();
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Upload trade image</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <input
+                id="ai-image-upload"
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  setAiFile(file);
+                  setAiError(null);
+                }}
+              />
+              <label
+                htmlFor="ai-image-upload"
+                className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 bg-black/30 px-4 py-3 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+              >
+                <span className="text-sm font-medium text-zinc-200">
+                  {aiFile ? "Image selected. Click to reselect." : "Click to upload a trade screenshot"}
+                </span>
+                <span>PNG / JPG / JPEG</span>
+              </label>
+              {aiPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={aiPreviewUrl}
+                  alt="preview"
+                  className="h-32 w-full rounded border border-zinc-800 object-cover"
+                />
+              ) : null}
+              {aiError ? <p className="text-xs text-red-400">{aiError}</p> : null}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setAiDialogOpen(false);
+                }}
+                disabled={aiParsing}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleAiParse} disabled={!aiFile || aiParsing}>
+                {aiParsing && <LoaderIcon className="animate-spin" />}
+                Parse image
+              </Button>
             </div>
           </div>
-
-          <div className="mt-4 flex items-center justify-end gap-2 border-t border-zinc-800 pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <LoaderIcon className="animate-spin" />}
-              {submitLabel}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

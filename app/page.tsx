@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { format } from "date-fns";
+import Link from "next/link";
 
 import {
   Table,
@@ -15,6 +16,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { TradeExportAllButton } from "@/components/trade-export-all";
 import { TradeCreateDialog } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
+import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 
 type TradeRow = Awaited<ReturnType<typeof prisma.trade.findMany>>[number];
@@ -40,6 +42,7 @@ export default async function Home({ searchParams }: PageProps) {
     symbol: t.symbol,
     direction: t.direction,
     result: t.result,
+    tradeMode: t.tradeMode,
     entryTime: t.entryTime.toISOString(),
     exitTime: t.exitTime.toISOString(),
     pnlAmount: t.pnlAmount,
@@ -52,6 +55,7 @@ export default async function Home({ searchParams }: PageProps) {
     tpPoint: t.tpPoint,
     actualRMultiple: t.actualRMultiple,
     plannedRMultiple: t.plannedRMultiple,
+    earlyExit: t.earlyExit,
     entryReason: t.entryReason,
     expectedScenario: t.expectedScenario,
     confidenceLevel: t.confidenceLevel,
@@ -74,6 +78,13 @@ export default async function Home({ searchParams }: PageProps) {
           <ModeToggle />
           <TradeCreateDialog />
           <TradeExportAllButton trades={exportTrades} />
+          <Button
+            asChild
+            size="sm"
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+          >
+            <Link href="/stream">Infinite Stream</Link>
+          </Button>
         </div>
         <Table className="min-w-[1600px] rounded-lg border border-zinc-900 bg-zinc-950/30">
           <TableCaption>
@@ -114,6 +125,7 @@ export default async function Home({ searchParams }: PageProps) {
                       symbol: t.symbol,
                       direction: t.direction,
                       result: t.result,
+                      tradeMode: t.tradeMode,
                       entryTime: t.entryTime,
                       exitTime: t.exitTime,
                       pnlAmount: t.pnlAmount,
@@ -126,6 +138,7 @@ export default async function Home({ searchParams }: PageProps) {
                       tpPoint: t.tpPoint,
                       actualRMultiple: t.actualRMultiple,
                       plannedRMultiple: t.plannedRMultiple,
+                      earlyExit: t.earlyExit,
                       entryReason: t.entryReason,
                       expectedScenario: t.expectedScenario,
                       confidenceLevel: t.confidenceLevel,

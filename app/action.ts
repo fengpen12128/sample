@@ -26,10 +26,25 @@ function requiredNumber(formData: FormData, key: string) {
   return Number.isFinite(n) ? n : null;
 }
 
+function requiredBoolean(formData: FormData, key: string) {
+  const raw = String(formData.get(key) ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return null;
+}
+
 function requiredDate(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
   if (!raw) return null;
-  const d = new Date(raw);
+  let normalized = raw;
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(normalized)) {
+    normalized = `${normalized}:00`;
+  }
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(normalized)) {
+    normalized = normalized.replace(" ", "T");
+  }
+  const d = new Date(normalized);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -53,6 +68,7 @@ function parseTradeInput(formData: FormData) {
   const symbol = requiredString(formData, "symbol");
   const direction = requiredString(formData, "direction");
   const result = requiredString(formData, "result");
+  const tradeMode = requiredString(formData, "tradeMode");
   const entryTime = requiredDate(formData, "entryTime");
   const exitTime = requiredDate(formData, "exitTime");
   const pnlAmount = requiredNumber(formData, "pnlAmount");
@@ -65,6 +81,7 @@ function parseTradeInput(formData: FormData) {
   const closingPoint = requiredNumber(formData, "closingPoint");
   const slPoint = requiredNumber(formData, "slPoint");
   const tpPoint = requiredNumber(formData, "tpPoint");
+  const earlyExit = requiredBoolean(formData, "earlyExit");
   const actualRMultiple =
     entryPoint !== null && slPoint !== null && closingPoint !== null
       ? computeRMultiple(entryPoint, slPoint, closingPoint)
@@ -87,6 +104,7 @@ function parseTradeInput(formData: FormData) {
     symbol &&
     direction &&
     result &&
+    tradeMode &&
     entryTime &&
     exitTime &&
     pnlAmount !== null &&
@@ -99,6 +117,7 @@ function parseTradeInput(formData: FormData) {
     tpPoint !== null &&
     actualRMultiple !== null &&
     plannedRMultiple !== null &&
+    earlyExit !== null &&
     entryReason &&
     expectedScenario &&
     confidenceLevel !== null;
@@ -123,6 +142,7 @@ function parseTradeInput(formData: FormData) {
       symbol,
       direction,
       result,
+      tradeMode,
       entryTime,
       exitTime,
       pnlAmount,
@@ -135,6 +155,7 @@ function parseTradeInput(formData: FormData) {
       tpPoint,
       actualRMultiple,
       plannedRMultiple,
+      earlyExit,
       entryReason,
       expectedScenario,
       confidenceLevel: Math.trunc(confidenceLevel),
