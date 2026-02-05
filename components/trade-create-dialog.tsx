@@ -420,13 +420,21 @@ function TradeFormDialog({
     formData.append("expectedScenario", data.entryReason ?? "");
     formData.append("screenshotUrl", data.screenshotUrl ?? "");
 
-    if (mode === "edit") {
-      await updateTrade(formData);
-    } else {
-      await createTrade(formData);
-    }
+    try {
+      const result = mode === "edit"
+        ? await updateTrade(formData)
+        : await createTrade(formData);
 
-    setOpen(false);
+      if (!result?.ok) {
+        toast.error(result?.error ?? "Save failed. Please try again.");
+        return;
+      }
+
+      toast.success("Trade saved successfully.");
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Save failed. Please try again.");
+    }
   };
 
   const onError = () => {

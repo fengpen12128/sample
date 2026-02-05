@@ -34,6 +34,7 @@ type StreamResponse = {
 };
 
 const PAGE_SIZE = 10;
+const initialLoadKeys = new Set<string>();
 
 function formatDateTime(value: string) {
   if (!value) return "—";
@@ -48,15 +49,29 @@ export default function StreamPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [resultFilter, setResultFilter] = React.useState("all");
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+  const offsetRef = React.useRef(0);
+  const loadingRef = React.useRef(false);
+  const requestedRef = React.useRef<Set<string>>(new Set());
+  const requestCounterRef = React.useRef(0);
   const resultOptions = ["all", "win", "loss"];
 
-  const loadMore = React.useCallback(async () => {
-    if (loading || !hasMore) return;
+  const loadMore = React.useCallback(async (overrideOffset?: number) => {
+    if (loadingRef.current || !hasMore) return;
     setLoading(true);
+    loadingRef.current = true;
     setError(null);
     try {
+      const currentOffset = overrideOffset ?? offsetRef.current;
+      const requestKey = `${resultFilter}:${currentOffset}`;
+      if (requestedRef.current.has(requestKey)) {
+        setLoading(false);
+        loadingRef.current = false;
+        return;
+      }
+      requestedRef.current.add(requestKey);
+      requestCounterRef.current += 1;
       const params = new URLSearchParams({
-        offset: String(offset),
+        offset: String(currentOffset),
         limit: String(PAGE_SIZE),
       });
       if (resultFilter !== "all") {
@@ -70,26 +85,40 @@ export default function StreamPage() {
         throw new Error(`Request failed: ${response.status}`);
       }
       const data = (await response.json()) as StreamResponse;
-      setItems((prev) => [...prev, ...data.items]);
-      setOffset((prev) => prev + data.items.length);
+      setItems((prev) => {
+        const merged = new Map<number, StreamTrade>();
+        prev.forEach((item) => merged.set(item.id, item));
+        data.items.forEach((item) => merged.set(item.id, item));
+        return Array.from(merged.values());
+      });
+      setOffset((prev) => {
+        const next = prev + data.items.length;
+        offsetRef.current = next;
+        return next;
+      });
       setHasMore(data.hasMore);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  }, [hasMore, loading, offset, resultFilter]);
-
-  React.useEffect(() => {
-    void loadMore();
-  }, [loadMore]);
+  }, [hasMore, resultFilter]);
 
   React.useEffect(() => {
     setItems([]);
     setOffset(0);
+    offsetRef.current = 0;
+    requestedRef.current.clear();
+    requestCounterRef.current = 0;
     setHasMore(true);
     setLoading(false);
+    loadingRef.current = false;
     setError(null);
+    const initialKey = `${resultFilter}:0`;
+    if (initialLoadKeys.has(initialKey)) return;
+    initialLoadKeys.add(initialKey);
+    void loadMore(0);
   }, [resultFilter]);
 
   React.useEffect(() => {
@@ -98,9 +127,7 @@ export default function StreamPage() {
     if (!node) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void loadMore();
-        }
+        if (entries[0]?.isIntersecting) void loadMore();
       },
       { rootMargin: "200px" },
     );

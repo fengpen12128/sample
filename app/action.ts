@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 
@@ -176,35 +176,46 @@ function parseTradeInput(formData: FormData) {
 export async function createTrade(formData: FormData) {
   const parsed = parseTradeInput(formData);
   if (!parsed.ok) {
-    redirect("/?error=" + encodeURIComponent(parsed.error));
+    return { ok: false as const, error: parsed.error };
   }
 
   await prisma.trade.create({
     data: parsed.data,
   });
-  redirect("/");
+
+  revalidatePath("/");
+  revalidatePath("/stream");
+  return { ok: true as const };
 }
 
 export async function updateTrade(formData: FormData) {
   const id = requiredInt(formData, "id");
-  if (id === null) redirect("/?error=" + encodeURIComponent("Invalid id"));
+  if (id === null) {
+    return { ok: false as const, error: "Invalid id" };
+  }
 
   const parsed = parseTradeInput(formData);
-  if (!parsed.ok) redirect("/?error=" + encodeURIComponent(parsed.error));
+  if (!parsed.ok) {
+    return { ok: false as const, error: parsed.error };
+  }
 
   await prisma.trade.update({
     where: { id },
     data: parsed.data,
   });
 
-  redirect("/");
+  revalidatePath("/");
+  revalidatePath("/stream");
+  return { ok: true as const };
 }
 
 export async function deleteTrade(formData: FormData) {
   const id = requiredInt(formData, "id");
-  if (id === null) redirect("/?error=" + encodeURIComponent("Invalid id"));
+  if (id === null) {
+    return;
+  }
 
   await prisma.trade.delete({ where: { id } });
-  redirect("/");
+  revalidatePath("/");
+  revalidatePath("/stream");
 }
-
