@@ -44,3 +44,19 @@ export async function downloadTelegramFile(filePath: string) {
     contentType,
   };
 }
+
+export async function sendTelegramMessage(chatId: number, text: string) {
+  const token = getTelegramToken();
+  const response = await fetch(`${TELEGRAM_API_BASE}/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to send Telegram message");
+  }
+}
