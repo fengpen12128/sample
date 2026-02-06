@@ -3,6 +3,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { LiquidGlassDefs } from "@/components/ui/liquid-glass-defs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <LiquidGlassDefs />
           {children}
           <Toaster />
         </ThemeProvider>

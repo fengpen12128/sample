@@ -22,11 +22,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buildExportFileName, buildTradeMarkdown } from "@/lib/trade-export";
+import { buildTradingViewChartUrl } from "@/lib/tradingview";
 
 export function TradeRowActions({ trade }: { trade: TradeEditable }) {
   const deleteFormRef = React.useRef<HTMLFormElement>(null);
   const markdown = React.useMemo(() => buildTradeMarkdown(trade), [trade]);
   const pineLine = React.useMemo(() => buildPineLine(trade), [trade]);
+  const tradingViewEntryUrl = React.useMemo(
+    () =>
+      buildTradingViewChartUrl({
+        symbol: trade.symbol,
+        timeframe: trade.timeframe,
+        at: trade.entryTime,
+      }),
+    [trade.entryTime, trade.symbol, trade.timeframe],
+  );
+  const tradingViewExitUrl = React.useMemo(
+    () =>
+      buildTradingViewChartUrl({
+        symbol: trade.symbol,
+        timeframe: trade.timeframe,
+        at: trade.exitTime,
+      }),
+    [trade.exitTime, trade.symbol, trade.timeframe],
+  );
 
   return (
     <DropdownMenu>
@@ -119,10 +138,59 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
             <DialogHeader>
               <DialogTitle>Pine Script Line</DialogTitle>
             </DialogHeader>
-            <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
-              <pre className="whitespace-pre-wrap text-xs text-zinc-100">
-                {pineLine}
-              </pre>
+            <div className="space-y-4">
+              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+                <pre className="whitespace-pre-wrap text-xs text-zinc-100">
+                  {pineLine}
+                </pre>
+              </div>
+
+              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+                <div className="mb-2 text-sm font-medium text-zinc-100">
+                  TradingView
+                </div>
+                <div className="flex flex-col gap-2 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <a
+                      href={tradingViewEntryUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-emerald-300 underline"
+                      title={tradingViewEntryUrl}
+                    >
+                      Open (Entry)
+                    </a>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => navigator.clipboard.writeText(tradingViewEntryUrl)}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <a
+                      href={tradingViewExitUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-emerald-300 underline"
+                      title={tradingViewExitUrl}
+                    >
+                      Open (Exit)
+                    </a>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => navigator.clipboard.writeText(tradingViewExitUrl)}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

@@ -73,7 +73,7 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto w-full max-w-6xl overflow-x-auto">
+      <div className="mx-auto w-full lg:w-[70%] max-w-none">
         <div className="mb-3 flex items-center justify-end gap-2">
           <ModeToggle />
           <TradeCreateDialog />
@@ -86,7 +86,7 @@ export default async function Home({ searchParams }: PageProps) {
             <Link href="/stream">Infinite Stream</Link>
           </Button>
         </div>
-        <Table className="min-w-[1600px] rounded-lg border border-zinc-900 bg-zinc-950/30">
+        <Table className="rounded-lg border border-zinc-900 bg-zinc-950/30 table-fixed">
           <TableCaption>
             <div className="flex items-center justify-between gap-3">
               <div className="text-zinc-500">
@@ -101,20 +101,41 @@ export default async function Home({ searchParams }: PageProps) {
 
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[90px]">Actions</TableHead>
-              <TableHead className="w-[90px]">ID</TableHead>
-              <TableHead className="w-[140px]">PnL amount</TableHead>
-              <TableHead className="w-[140px]">Symbol</TableHead>
-              <TableHead className="w-[120px]">Direction</TableHead>
-              <TableHead className="w-[120px]">Result</TableHead>
-              <TableHead className="w-[180px]">Entry time</TableHead>
-              <TableHead className="w-[180px]">Exit time</TableHead>
+              <TableHead className="w-[70px]">ID</TableHead>
+              <TableHead className="w-[110px]">PnL amount</TableHead>
+              <TableHead className="w-[110px]">Symbol</TableHead>
+              <TableHead className="w-[90px]">Direction</TableHead>
+              <TableHead className="w-[90px]">Result</TableHead>
+              <TableHead className="w-[150px]">Entry time</TableHead>
+              <TableHead className="w-[150px]">Exit time</TableHead>
+              <TableHead className="w-[70px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {trades.map((t) => (
               <TableRow key={t.id}>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-300">
+                  #{t.id}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {t.pnlAmount}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
+                  {t.symbol}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {t.direction}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {t.result}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {formatDateTime(t.entryTime)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {formatDateTime(t.exitTime)}
+                </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <TradeRowActions
                     trade={{
@@ -145,27 +166,6 @@ export default async function Home({ searchParams }: PageProps) {
                       screenshotUrl: t.screenshotUrl,
                     }}
                   />
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-300">
-                  #{t.id}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.pnlAmount}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.symbol}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.direction}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.result}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {formatDateTime(t.entryTime)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {formatDateTime(t.exitTime)}
                 </TableCell>
               </TableRow>
             ))}
