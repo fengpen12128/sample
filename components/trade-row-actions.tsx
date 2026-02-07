@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { CheckIcon, CopyIcon } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 
 import { deleteTrade } from "@/app/action";
@@ -26,8 +27,19 @@ import { buildTradingViewChartUrl } from "@/lib/tradingview";
 
 export function TradeRowActions({ trade }: { trade: TradeEditable }) {
   const deleteFormRef = React.useRef<HTMLFormElement>(null);
+  const copyTimerRef = React.useRef<number | null>(null);
+  const [copied, setCopied] = React.useState(false);
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
+
   const markdown = React.useMemo(() => buildTradeMarkdown(trade), [trade]);
-  const pineLine = React.useMemo(() => buildPineLine(trade), [trade]);
+  const pineScript = React.useMemo(() => buildPineScript(trade), [trade]);
   const tradingViewEntryUrl = React.useMemo(
     () =>
       buildTradingViewChartUrl({
@@ -128,29 +140,51 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
 
         <DropdownMenuSeparator />
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              Script
-            </DropdownMenuItem>
-          </DialogTrigger>
-          <DialogContent className="!w-[60vw] !max-w-none">
-            <DialogHeader>
-              <DialogTitle>Pine Script Line</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
-                <pre className="whitespace-pre-wrap text-xs text-zinc-100">
-                  {pineLine}
-                </pre>
-              </div>
+	        <Dialog>
+	          <DialogTrigger asChild>
+	            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+	              Script
+	            </DropdownMenuItem>
+	          </DialogTrigger>
+	          <DialogContent className="!w-[60vw] !max-w-none">
+	            <DialogHeader>
+	              <DialogTitle>Pine Script</DialogTitle>
+	            </DialogHeader>
+	            <div className="space-y-4">
+	              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+	                <div className="relative">
+	                  <Button
+	                    type="button"
+	                    variant="ghost"
+	                    size="icon-sm"
+	                    className="absolute right-0 top-0 text-zinc-300 hover:bg-transparent hover:text-zinc-100"
+	                    aria-label="Copy script"
+	                    onClick={async () => {
+	                      await navigator.clipboard.writeText(pineScript);
+	                      setCopied(true);
+	                      if (copyTimerRef.current !== null) {
+	                        window.clearTimeout(copyTimerRef.current);
+	                      }
+	                      copyTimerRef.current = window.setTimeout(() => {
+	                        setCopied(false);
+	                        copyTimerRef.current = null;
+	                      }, 1200);
+	                    }}
+	                  >
+	                    {copied ? <CheckIcon /> : <CopyIcon />}
+	                  </Button>
+	                  <pre className="whitespace-pre-wrap pr-10 text-xs text-zinc-100">
+	                    {pineScript}
+	                  </pre>
+	                </div>
+	              </div>
 
-              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
-                <div className="mb-2 text-sm font-medium text-zinc-100">
-                  TradingView
-                </div>
-                <div className="flex flex-col gap-2 text-xs">
-                  <div className="flex items-center justify-between gap-3">
+	              <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+	                <div className="mb-2 text-sm font-medium text-zinc-100">
+	                  TradingView
+	                </div>
+	                <div className="flex flex-col gap-2 text-xs">
+	                  <div className="flex items-center justify-between gap-3">
                     <a
                       href={tradingViewEntryUrl}
                       target="_blank"
@@ -188,12 +222,12 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
                     >
                       Copy
                     </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+	                  </div>
+	                </div>
+	              </div>
+	            </div>
+	          </DialogContent>
+	        </Dialog>
 
         <DropdownMenuSeparator />
 
@@ -229,32 +263,74 @@ function downloadMarkdown(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function buildPineLine(trade: TradeEditable) {
+function buildPineScript(trade: TradeEditable) {
   const tIn = trade.entryTime instanceof Date ? trade.entryTime : new Date(trade.entryTime);
   const tOut = trade.exitTime instanceof Date ? trade.exitTime : new Date(trade.exitTime);
+  const isShort = String(trade.direction).trim().toLowerCase() === "short";
+  const isWin = String(trade.result).trim().toLowerCase() === "win";
 
-  return [
+  const brokerTz = "GMT+8";
+  const fnCall = [
     "    add_trade(",
     [
-      tIn.getFullYear(),
-      tIn.getMonth() + 1,
-      tIn.getDate(),
-      tIn.getHours(),
-      tIn.getMinutes(),
-      tIn.getSeconds(),
+      // Stored trade timestamps are treated as "wall-clock" values (naive).
+      // Use UTC getters to avoid converting them to the viewer's local timezone.
+      tIn.getUTCFullYear(),
+      tIn.getUTCMonth() + 1,
+      tIn.getUTCDate(),
+      tIn.getUTCHours(),
+      tIn.getUTCMinutes(),
+      tIn.getUTCSeconds(),
       cleanNum(trade.entryPoint),
       cleanNum(trade.slPoint),
       cleanNum(trade.tpPoint),
       cleanNum(trade.closingPoint),
-      tOut.getFullYear(),
-      tOut.getMonth() + 1,
-      tOut.getDate(),
-      tOut.getHours(),
-      tOut.getMinutes(),
-      tOut.getSeconds(),
+      tOut.getUTCFullYear(),
+      tOut.getUTCMonth() + 1,
+      tOut.getUTCDate(),
+      tOut.getUTCHours(),
+      tOut.getUTCMinutes(),
+      tOut.getUTCSeconds(),
+      String(isShort),
+      String(isWin),
     ].join(", "),
     ")",
   ].join("");
+
+  return [
+    '//@version=5',
+    'indicator("MT5极简箭头版 (时间修正)", overlay=true, max_lines_count=500)',
+    "",
+    "// 基础设置",
+    `string broker_tz = "${brokerTz}"`,
+    "",
+    "// 核心函数",
+    "add_trade(y, m, d, h, min, s, entry, sl, tp, exit, out_y, out_m, out_d, out_h, out_min, out_s, is_short, is_win) =>",
+    "    t1 = timestamp(broker_tz, y, m, d, h, min, s)",
+    "    t2 = timestamp(broker_tz, out_y, out_m, out_d, out_h, out_min, out_s)",
+    "",
+	    "    // 颜色配置：线条赢=绿色，输=紫色；箭头固定黄色",
+	    "    color tradeColor = is_win ? #00FF00 : #800080",
+    "",
+    "    // 1. 使用 label 模拟箭头 (解决 plotshape 不支持时间定位的问题)",
+	    "    label.new(x=t1, y=entry,",
+	    '         text="",',
+		    "         xloc=xloc.bar_time,",
+		    "         style=is_short ? label.style_arrowdown : label.style_arrowup,",
+		    "         color=#FFFF00,",
+		    "         size=size.large)",
+    "",
+	    "    // 2. 绘制交易斜线",
+	    "    line.new(x1=t1, y1=entry, x2=t2, y2=exit, xloc=xloc.bar_time,",
+	    "             color=tradeColor, width=7)",
+    "",
+    "// ==========================================",
+    "// ============== 数据录入区 ================",
+    "// ==========================================",
+    "if barstate.islast",
+    "    // === 粘贴区开始 ===",
+    fnCall,
+  ].join("\n");
 }
 
 function cleanNum(value: number | null | undefined) {

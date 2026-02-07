@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { format } from "date-fns";
 import Link from "next/link";
 
 import {
@@ -18,12 +17,13 @@ import { TradeCreateDialog } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
 type TradeRow = Awaited<ReturnType<typeof prisma.trade.findMany>>[number];
 
 function formatDateTime(value: Date | null) {
   if (!value) return "—";
-  return format(value, "yyyy-MM-dd HH:mm:ss");
+  return formatWallClockYmdHms(value) || "—";
 }
 
 type PageProps = {
@@ -32,7 +32,7 @@ type PageProps = {
 
 export default async function Home({ searchParams }: PageProps) {
   const trades: TradeRow[] = await prisma.trade.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ entryTime: "desc" }, { id: "desc" }],
   });
   const exportTrades = trades.map((t) => ({
     id: t.id,
@@ -43,8 +43,8 @@ export default async function Home({ searchParams }: PageProps) {
     direction: t.direction,
     result: t.result,
     tradeMode: t.tradeMode,
-    entryTime: t.entryTime.toISOString(),
-    exitTime: t.exitTime.toISOString(),
+    entryTime: formatWallClockYmdHms(t.entryTime),
+    exitTime: formatWallClockYmdHms(t.exitTime),
     pnlAmount: t.pnlAmount,
     setupType: t.setupType,
     setupQuality: t.setupQuality,
@@ -99,16 +99,18 @@ export default async function Home({ searchParams }: PageProps) {
             </div>
           </TableCaption>
 
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[70px]">ID</TableHead>
-              <TableHead className="w-[110px]">PnL amount</TableHead>
-              <TableHead className="w-[110px]">Symbol</TableHead>
-              <TableHead className="w-[90px]">Direction</TableHead>
-              <TableHead className="w-[90px]">Result</TableHead>
-              <TableHead className="w-[150px]">Entry time</TableHead>
-              <TableHead className="w-[150px]">Exit time</TableHead>
-              <TableHead className="w-[70px]">Actions</TableHead>
+	          <TableHeader>
+	            <TableRow>
+	              <TableHead className="w-[70px]">ID</TableHead>
+	              <TableHead className="w-[110px]">PnL amount</TableHead>
+	              <TableHead className="w-[120px]">Entry Point</TableHead>
+	              <TableHead className="w-[120px]">Exit Point</TableHead>
+	              <TableHead className="w-[110px]">Symbol</TableHead>
+	              <TableHead className="w-[90px]">Direction</TableHead>
+	              <TableHead className="w-[90px]">Result</TableHead>
+	              <TableHead className="w-[150px]">Entry time</TableHead>
+	              <TableHead className="w-[150px]">Exit time</TableHead>
+	              <TableHead className="w-[70px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -118,14 +120,20 @@ export default async function Home({ searchParams }: PageProps) {
                 <TableCell className="whitespace-nowrap text-xs text-zinc-300">
                   #{t.id}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.pnlAmount}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
-                  {t.symbol}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.direction}
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.pnlAmount}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.entryPoint}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.closingPoint}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
+	                  {t.symbol}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.direction}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-zinc-200">
                   {t.result}

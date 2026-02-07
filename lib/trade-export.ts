@@ -1,21 +1,17 @@
-import { format } from "date-fns";
-
 import type { TradeEditable } from "@/components/trade-create-dialog";
+import { formatWallClockYmd, formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
 export type TradeExportable = Omit<TradeEditable, "entryTime" | "exitTime"> & {
   entryTime: Date | string;
   exitTime: Date | string;
 };
 
-const DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-const DATE_FILE_FORMAT = "yyyyMMdd";
-
 export function buildTradeMarkdown(
   trade: TradeExportable,
   options?: { imagePath?: string },
 ) {
-  const entryTime = formatMaybeDate(trade.entryTime, DATE_TIME_FORMAT);
-  const exitTime = formatMaybeDate(trade.exitTime, DATE_TIME_FORMAT);
+  const entryTime = formatWallClockYmdHms(trade.entryTime);
+  const exitTime = formatWallClockYmdHms(trade.exitTime);
   const imagePath = options?.imagePath?.trim();
   const screenshotLine = imagePath
     ? `![Screenshot](${imagePath})`
@@ -71,18 +67,13 @@ export function buildTradeMarkdown(
 }
 
 export function buildExportFileName(trade: TradeExportable) {
-  const date = formatMaybeDate(trade.entryTime, DATE_FILE_FORMAT) || "trade";
+  const date = formatWallClockYmd(trade.entryTime) || "trade";
   const symbol = trade.symbol ? sanitizeFileSegment(trade.symbol) : "symbol";
   return `${date}-${symbol}-trade-${trade.id}.md`;
 }
 
 export function sanitizeFileSegment(value: string) {
   return value.trim().replace(/[^\w.-]+/g, "-");
-}
-
-function formatMaybeDate(value: Date | string, pattern: string) {
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : format(date, pattern);
 }
 
 function formatMaybeNumber(value: number | null | undefined) {

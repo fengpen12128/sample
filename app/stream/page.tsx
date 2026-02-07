@@ -2,8 +2,8 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
 import Link from "next/link";
+import { PencilIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TradeReviewEditorDialog } from "@/components/trade-review-editor-dialog";
 
 type StreamTrade = {
   id: number;
+  timeframe: string | null;
+  trendAssessment: string | null;
+  marketPhase: string | null;
   symbol: string;
   direction: string;
   result: string;
@@ -33,9 +37,20 @@ type StreamTrade = {
   entryTime: string;
   exitTime: string;
   pnlAmount: number;
-  timeframe: string;
-  setupType: string;
-  screenshotUrl: string;
+  setupType: string | null;
+  setupQuality: string | null;
+  entryType: string | null;
+  entryPoint: number;
+  closingPoint: number;
+  slPoint: number | null;
+  tpPoint: number | null;
+  actualRMultiple: number | null;
+  plannedRMultiple: number | null;
+  earlyExit: boolean | null;
+  entryReason: string | null;
+  expectedScenario: string | null;
+  confidenceLevel: number | null;
+  screenshotUrl: string | null;
 };
 
 type StreamResponse = {
@@ -48,7 +63,7 @@ const initialLoadKeys = new Set<string>();
 
 function formatDateTime(value: string) {
   if (!value) return "—";
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
+  return value;
 }
 
 function ScreenshotViewer({
@@ -190,6 +205,13 @@ export default function StreamPage() {
     }
   }, []);
 
+  const handleReviewSaved = React.useCallback(
+    ({ id, entryReason }: { id: number; entryReason: string | null }) => {
+      setItems((prev) => prev.map((t) => (t.id === id ? { ...t, entryReason } : t)));
+    },
+    [],
+  );
+
   React.useEffect(() => {
     setItems([]);
     offsetRef.current = 0;
@@ -315,16 +337,30 @@ export default function StreamPage() {
         </div>
 
         <div className="space-y-0">
-          {items.map((trade) => (
-            <section
-              key={trade.id}
-              className="min-h-[100svh] snap-start py-6"
-            >
-              <article className="h-[calc(100svh-3rem)] w-full rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 text-left flex flex-col">
-                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-zinc-400">
-                  <span>Trade #{trade.id}</span>
-                  <span>{formatDateTime(trade.entryTime)}</span>
-                </div>
+	          {items.map((trade) => (
+	            <section
+	              key={trade.id}
+	              className="min-h-[100svh] snap-start py-6"
+	            >
+	              <article className="relative h-[calc(100svh-3rem)] w-full rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 text-left flex flex-col">
+	                <div className="absolute right-3 top-3">
+	                  <TradeReviewEditorDialog
+	                    tradeId={trade.id}
+	                    screenshotUrl={trade.screenshotUrl}
+	                    initialReview={trade.entryReason}
+	                    onSaved={handleReviewSaved}
+	                    trigger={
+	                      <Button type="button" size="sm" variant="secondary" className="gap-1.5">
+	                        <PencilIcon className="size-3.5" />
+	                        Review
+	                      </Button>
+	                    }
+	                  />
+	                </div>
+	                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-zinc-400">
+	                  <span>Trade #{trade.id}</span>
+	                  <span>{formatDateTime(trade.entryTime)}</span>
+	                </div>
                 <div className="flex flex-wrap justify-start gap-2 text-xs text-zinc-200">
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
                     {trade.symbol}

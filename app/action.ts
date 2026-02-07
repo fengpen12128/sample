@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
 function requiredInt(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
@@ -59,11 +60,8 @@ function requiredDate(formData: FormData, key: string) {
   if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(normalized)) {
     normalized = `${normalized}:00`;
   }
-  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(normalized)) {
-    normalized = normalized.replace(" ", "T");
-  }
-  const d = new Date(normalized);
-  return Number.isNaN(d.getTime()) ? null : d;
+  const d = parseWallClockDateTime(normalized);
+  return d;
 }
 
 function roundToTwo(n: number) {
@@ -205,6 +203,25 @@ export async function updateTrade(formData: FormData) {
   });
 
   revalidatePath("/");
+  revalidatePath("/stream");
+  return { ok: true as const };
+}
+
+export async function updateTradeReview(formData: FormData) {
+  const id = requiredInt(formData, "id");
+  if (id === null) {
+    return { ok: false as const, error: "Invalid id" };
+  }
+
+  const text = String(formData.get("entryReason") ?? "");
+  const normalized = text.trim();
+  const entryReason = normalized ? normalized : null;
+
+  await prisma.trade.update({
+    where: { id },
+    data: { entryReason },
+  });
+
   revalidatePath("/stream");
   return { ok: true as const };
 }

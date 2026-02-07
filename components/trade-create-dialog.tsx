@@ -4,7 +4,6 @@ import * as React from "react";
 import type { PutBlobResult } from "@vercel/blob";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
 import { LoaderIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +11,7 @@ import { z } from "zod";
 
 import { createTrade, updateTrade } from "@/app/action";
 import { Button } from "@/components/ui/button";
+import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 import {
   Dialog,
   DialogClose,
@@ -116,54 +116,57 @@ function TradeFormDialog({
   submitLabel,
   mode,
   initial,
+  onSaved,
 }: {
   trigger: React.ReactNode;
   title: string;
   submitLabel: string;
   mode: "create" | "edit";
   initial?: TradeEditable;
+  onSaved?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const [uploadingScreenshot, setUploadingScreenshot] = React.useState(false);
   const [screenshotError, setScreenshotError] = React.useState<string | null>(null);
   const [aiDialogOpen, setAiDialogOpen] = React.useState(false);
-  const [aiFile, setAiFile] = React.useState<File | null>(null);
-  const [aiPreviewUrl, setAiPreviewUrl] = React.useState<string | null>(null);
-  const [aiParsing, setAiParsing] = React.useState(false);
-  const [aiError, setAiError] = React.useState<string | null>(null);
+	const [aiFile, setAiFile] = React.useState<File | null>(null);
+	const [aiPreviewUrl, setAiPreviewUrl] = React.useState<string | null>(null);
+	const [aiParsing, setAiParsing] = React.useState(false);
+	const [aiError, setAiError] = React.useState<string | null>(null);
+  const screenshotInputId = React.useId();
+  const screenshotInputRef = React.useRef<HTMLInputElement>(null);
 
   const controlClassName = "h-10 text-sm";
   const selectTriggerClassName = "h-10 w-full text-sm";
-  const getDefaultValues = React.useCallback((): TradeFormValues => ({
-    pnlAmount: initial?.pnlAmount !== undefined ? String(initial.pnlAmount) : "",
-    symbol: initial?.symbol ?? "XAUUSD",
-    direction: initial?.direction ?? "long",
-    result: initial?.result ?? "win",
-    tradeMode: initial?.tradeMode ?? "live",
-    entryTime: initial?.entryTime
-      ? format(new Date(initial.entryTime), "yyyy-MM-dd HH:mm:ss")
-      : "",
-    exitTime: initial?.exitTime
-      ? format(new Date(initial.exitTime), "yyyy-MM-dd HH:mm:ss")
-      : "",
-    timeframe: initial ? initial.timeframe ?? "" : "5m",
-    trendAssessment: initial ? initial.trendAssessment ?? "" : "Weak Bull Trend Channel",
-    marketPhase: initial ? initial.marketPhase ?? "" : "Pullback",
-    setupType: initial ? initial.setupType ?? "" : "H2",
-    entryType: initial ? initial.entryType ?? "" : "stop",
-    confidenceLevel: initial
-      ? initial.confidenceLevel !== null && initial.confidenceLevel !== undefined
-        ? String(initial.confidenceLevel)
-        : ""
-      : "3",
-    entryPoint: initial?.entryPoint !== undefined ? String(initial.entryPoint) : "",
-    closingPoint: initial?.closingPoint !== undefined ? String(initial.closingPoint) : "",
-    slPoint: initial?.slPoint !== undefined ? String(initial.slPoint) : "",
-    tpPoint: initial?.tpPoint !== undefined ? String(initial.tpPoint) : "",
-    earlyExit: initial?.earlyExit ?? false,
-    entryReason: initial?.entryReason ?? "",
-    screenshotUrl: initial?.screenshotUrl ?? "",
-  }), [initial]);
+  const getDefaultValues = React.useCallback(
+    (): TradeFormValues => ({
+      pnlAmount: initial?.pnlAmount !== undefined ? String(initial.pnlAmount) : "",
+      symbol: initial?.symbol ?? "XAUUSD",
+      direction: initial?.direction ?? "long",
+      result: initial?.result ?? "win",
+      tradeMode: initial?.tradeMode ?? "live",
+      entryTime: initial?.entryTime ? formatWallClockYmdHms(initial.entryTime) : "",
+      exitTime: initial?.exitTime ? formatWallClockYmdHms(initial.exitTime) : "",
+      timeframe: initial ? initial.timeframe ?? "" : "5m",
+      trendAssessment: initial ? initial.trendAssessment ?? "" : "Weak Bull Trend Channel",
+      marketPhase: initial ? initial.marketPhase ?? "" : "Pullback",
+      setupType: initial ? initial.setupType ?? "" : "H2",
+      entryType: initial ? initial.entryType ?? "" : "stop",
+      confidenceLevel: initial
+        ? initial.confidenceLevel !== null && initial.confidenceLevel !== undefined
+          ? String(initial.confidenceLevel)
+          : ""
+        : "3",
+      entryPoint: initial?.entryPoint !== undefined ? String(initial.entryPoint) : "",
+      closingPoint: initial?.closingPoint !== undefined ? String(initial.closingPoint) : "",
+      slPoint: initial?.slPoint !== undefined ? String(initial.slPoint) : "",
+      tpPoint: initial?.tpPoint !== undefined ? String(initial.tpPoint) : "",
+      earlyExit: initial?.earlyExit ?? false,
+      entryReason: initial?.entryReason ?? "",
+      screenshotUrl: initial?.screenshotUrl ?? "",
+    }),
+    [initial],
+  );
 
   const form = useForm<TradeFormValues>({
     resolver: zodResolver(tradeFormSchema),
@@ -432,6 +435,7 @@ function TradeFormDialog({
 
       toast.success("Trade saved successfully.");
       setOpen(false);
+      onSaved?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Save failed. Please try again.");
     }
@@ -938,52 +942,80 @@ function TradeFormDialog({
                   </FieldGroup>
               </FieldSet>
 
-              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
-                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
-                  Screenshot
-                </FieldLegend>
-                  <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="screenshot-upload">Upload screenshot</FieldLabel>
-                    <input
-                      id="screenshot-upload"
-                      type="file"
-                      accept="image/*"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        void handleScreenshotUpload(file);
-                      }}
-                    />
-                    <label
-                      htmlFor="screenshot-upload"
-                      className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 bg-black/30 px-4 py-3 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
-                    >
-                      <span className="text-sm font-medium text-zinc-200">
-                        {uploadingScreenshot ? "Uploading..." : "Click to upload image"}
-                      </span>
-                      <span>PNG, JPG, GIF — upload to Vercel Blob</span>
-                    </label>
-                    <FieldDescription>
-                      {screenshot
-                        ? "Image uploaded successfully."
-                        : "Preview appears after selecting an image."}
-                    </FieldDescription>
+	              <FieldSet className="rounded-md border border-zinc-800/80 bg-zinc-950/40 px-4 pb-4 pt-3">
+	                <FieldLegend className="bg-zinc-950/40 px-2 -ml-2 -mt-4 mb-2 w-fit">
+	                  Screenshot
+	                </FieldLegend>
+	                  <FieldGroup>
+	                  <Field>
+	                    <FieldLabel htmlFor={screenshotInputId}>Upload screenshot</FieldLabel>
+	                    <input
+	                      id={screenshotInputId}
+                        ref={screenshotInputRef}
+	                      type="file"
+	                      accept="image/*"
+	                      className="sr-only"
+	                      onChange={(e) => {
+	                        const file = e.target.files?.[0];
+	                        if (!file) return;
+                          // Allow selecting the same file again after upload.
+                          e.target.value = "";
+	                        void handleScreenshotUpload(file);
+	                      }}
+	                    />
+	                    <label
+	                      htmlFor={screenshotInputId}
+	                      className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 bg-black/30 px-4 py-3 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+	                    >
+	                      <span className="text-sm font-medium text-zinc-200">
+	                        {uploadingScreenshot
+                            ? "Uploading..."
+                            : screenshot
+                              ? "Click to replace image"
+                              : "Click to upload image"}
+	                      </span>
+	                      <span>PNG, JPG, GIF — upload to Vercel Blob</span>
+	                    </label>
+	                    <FieldDescription>
+	                      {screenshot
+	                        ? "Image uploaded successfully."
+	                        : "Preview appears after selecting an image."}
+	                    </FieldDescription>
                     {screenshotError ? (
                       <FieldError>{screenshotError}</FieldError>
                     ) : null}
-                    {screenshot ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={screenshot}
-                        alt="preview"
-                        className="mt-2 h-28 w-full rounded border border-zinc-800 object-cover"
-                      />
-                    ) : null}
-                  </Field>
-                  </FieldGroup>
-              </FieldSet>
+	                    {screenshot ? (
+	                      <div className="mt-2 space-y-2">
+	                        {/* eslint-disable-next-line @next/next/no-img-element */}
+	                        <img
+	                          src={screenshot}
+	                          alt="preview"
+	                          className="h-28 w-full rounded border border-zinc-800 object-cover"
+	                        />
+	                        <div className="flex items-center justify-end">
+	                          <Button
+	                            type="button"
+	                            size="sm"
+	                            variant="outline"
+	                            onClick={() => {
+	                              setValue("screenshotUrl", "", {
+	                                shouldDirty: true,
+	                                shouldValidate: true,
+	                              });
+	                              setScreenshotError(null);
+	                              if (screenshotInputRef.current) {
+	                                screenshotInputRef.current.value = "";
+	                              }
+	                            }}
+	                          >
+	                            Remove image
+	                          </Button>
+	                        </div>
+	                      </div>
+	                    ) : null}
+	                  </Field>
+	                  </FieldGroup>
+	              </FieldSet>
               </div>
             </div>
 
@@ -1095,9 +1127,11 @@ export function TradeCreateDialog() {
 export function TradeEditDialog({
   trigger,
   trade,
+  onSaved,
 }: {
   trigger: React.ReactNode;
   trade: TradeEditable;
+  onSaved?: () => void;
 }) {
   return (
     <TradeFormDialog
@@ -1106,6 +1140,7 @@ export function TradeEditDialog({
       submitLabel="Update"
       mode="edit"
       initial={trade}
+      onSaved={onSaved}
     />
   );
 }

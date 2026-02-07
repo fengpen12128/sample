@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -50,8 +51,8 @@ export async function GET(request: Request) {
       direction: t.direction,
       result: t.result,
       tradeMode: t.tradeMode,
-      entryTime: t.entryTime.toISOString(),
-      exitTime: t.exitTime.toISOString(),
+      entryTime: formatWallClockYmdHms(t.entryTime),
+      exitTime: formatWallClockYmdHms(t.exitTime),
       pnlAmount: t.pnlAmount,
       setupType: t.setupType,
       setupQuality: t.setupQuality,
@@ -62,6 +63,7 @@ export async function GET(request: Request) {
       tpPoint: t.tpPoint,
       actualRMultiple: t.actualRMultiple,
       plannedRMultiple: t.plannedRMultiple,
+      earlyExit: t.earlyExit,
       entryReason: t.entryReason,
       expectedScenario: t.expectedScenario,
       confidenceLevel: t.confidenceLevel,
