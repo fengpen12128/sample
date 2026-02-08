@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { TradeReviewEditorDialog } from "@/components/trade-review-editor-dialog";
 import { updateTradeScreenshot } from "@/app/action";
+import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
 type StreamTrade = {
   id: number;
@@ -247,8 +248,8 @@ function ScreenshotUploadPlaceholder({
 }
 
 function buildPineScript(trade: StreamTrade) {
-  const tIn = new Date(trade.entryTime);
-  const tOut = new Date(trade.exitTime);
+  const tIn = parseWallClockDateTime(trade.entryTime) ?? new Date(trade.entryTime);
+  const tOut = parseWallClockDateTime(trade.exitTime) ?? new Date(trade.exitTime);
   const isShort = String(trade.direction).trim().toLowerCase() === "short";
   const isWin = String(trade.result).trim().toLowerCase() === "win";
 
