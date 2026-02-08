@@ -201,7 +201,7 @@ function PostReviewHoverButton({ value }: { value: string | null }) {
       <PopoverContent
         align="end"
         side="bottom"
-        className="w-80 whitespace-pre-wrap"
+        className="w-80 whitespace-pre-wrap text-base font-['SF_Pro_Rounded','Arial_Rounded_MT_Bold','system-ui']"
         onMouseEnter={openPopover}
         onMouseLeave={closePopover}
       >
