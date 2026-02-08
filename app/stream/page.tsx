@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -172,6 +173,41 @@ function PineScriptDialog({ trade }: { trade: StreamTrade }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PostReviewHoverButton({ value }: { value: string | null }) {
+  const normalized = value?.trim();
+  const [open, setOpen] = React.useState(false);
+
+  if (!normalized) return null;
+
+  const openPopover = () => setOpen(true);
+  const closePopover = () => setOpen(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onMouseEnter={openPopover}
+          onMouseLeave={closePopover}
+        >
+          Post review
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side="bottom"
+        className="w-80 whitespace-pre-wrap"
+        onMouseEnter={openPopover}
+        onMouseLeave={closePopover}
+      >
+        {normalized}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -580,6 +616,7 @@ export default function StreamPage() {
 	            >
 	              <article className="relative h-[calc(100svh-3rem)] w-full rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 text-left flex flex-col">
                 <div className="absolute right-3 top-3 flex items-center gap-2">
+                  <PostReviewHoverButton value={trade.entryReason} />
                   <PineScriptDialog trade={trade} />
 	                  <TradeReviewEditorDialog
 	                    tradeId={trade.id}
