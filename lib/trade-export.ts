@@ -26,6 +26,7 @@ export function buildTradeMarkdown(
     "## Trade Details",
     `- PnL amount: ${formatMaybeNumber(trade.pnlAmount)}`,
     `- Symbol: ${formatMaybeString(trade.symbol)}`,
+    `- Trade platform: ${formatMaybeString(trade.tradePlatform)}`,
     `- Direction: ${formatMaybeString(trade.direction)}`,
     `- Result: ${formatMaybeString(trade.result)}`,
     `- Trade mode: ${formatMaybeString(trade.tradeMode)}`,

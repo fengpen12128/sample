@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   const resultRaw = searchParams.get("result")?.trim();
   const directionRaw = searchParams.get("direction")?.trim();
   const tradeModeRaw = searchParams.get("tradeMode")?.trim();
+  const tradePlatformRaw = searchParams.get("tradePlatform")?.trim();
   const offset = Math.max(0, Math.trunc(offsetRaw));
   const limit = Math.min(50, Math.max(1, Math.trunc(limitRaw)));
   const resultFilter = resultRaw && resultRaw.toLowerCase() !== "all" ? resultRaw : null;
@@ -25,11 +26,18 @@ export async function GET(request: Request) {
     directionRaw && directionRaw.toLowerCase() !== "all" ? directionRaw : null;
   const tradeModeFilter =
     tradeModeRaw && tradeModeRaw.toLowerCase() !== "all" ? tradeModeRaw : null;
+  const tradePlatformFilter =
+    tradePlatformRaw && tradePlatformRaw.toLowerCase() !== "all"
+      ? tradePlatformRaw
+      : null;
 
   const where: Prisma.TradeWhereInput = {};
   if (resultFilter) where.result = { equals: resultFilter, mode: "insensitive" };
   if (directionFilter) where.direction = { equals: directionFilter, mode: "insensitive" };
   if (tradeModeFilter) where.tradeMode = { equals: tradeModeFilter, mode: "insensitive" };
+  if (tradePlatformFilter) {
+    where.tradePlatform = { equals: tradePlatformFilter, mode: "insensitive" };
+  }
 
   const [items, total] = await Promise.all([
     prisma.trade.findMany({
@@ -48,6 +56,7 @@ export async function GET(request: Request) {
       trendAssessment: t.trendAssessment,
       marketPhase: t.marketPhase,
       symbol: t.symbol,
+      tradePlatform: t.tradePlatform,
       direction: t.direction,
       result: t.result,
       tradeMode: t.tradeMode,

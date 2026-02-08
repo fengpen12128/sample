@@ -82,6 +82,7 @@ function parseTradeInput(formData: FormData) {
   const marketPhase = optionalString(formData, "marketPhase");
 
   const symbol = requiredString(formData, "symbol");
+  const tradePlatform = requiredString(formData, "tradePlatform");
   const direction = requiredString(formData, "direction");
   const result = requiredString(formData, "result");
   const tradeMode = requiredString(formData, "tradeMode") ?? "live";
@@ -115,6 +116,7 @@ function parseTradeInput(formData: FormData) {
 
   const ok =
     symbol &&
+    tradePlatform &&
     direction &&
     result &&
     tradeMode &&
@@ -147,6 +149,7 @@ function parseTradeInput(formData: FormData) {
       trendAssessment,
       marketPhase,
       symbol,
+      tradePlatform,
       direction,
       result,
       tradeMode,

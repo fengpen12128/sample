@@ -18,6 +18,7 @@ model Trade {
 
   // 1.5) Trade details
   symbol           String
+  tradePlatform    String?
   direction        String
   result           String
   tradeMode        String   @default("live")

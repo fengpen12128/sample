@@ -31,6 +31,7 @@ type StreamTrade = {
   trendAssessment: string | null;
   marketPhase: string | null;
   symbol: string;
+  tradePlatform: string | null;
   direction: string;
   result: string;
   tradeMode: string;
@@ -122,6 +123,7 @@ export default function StreamPage() {
   const [tradeModeFilter, setTradeModeFilter] = React.useState("all");
   const [directionFilter, setDirectionFilter] = React.useState("all");
   const [resultFilter, setResultFilter] = React.useState("all");
+  const [tradePlatformFilter, setTradePlatformFilter] = React.useState("all");
   const scrollRootRef = React.useRef<HTMLElement | null>(null);
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
   const offsetRef = React.useRef(0);
@@ -132,9 +134,11 @@ export default function StreamPage() {
   const tradeModeFilterRef = React.useRef(tradeModeFilter);
   const directionFilterRef = React.useRef(directionFilter);
   const resultFilterRef = React.useRef(resultFilter);
+  const tradePlatformFilterRef = React.useRef(tradePlatformFilter);
   const tradeModeOptions = ["all", "live", "demo"];
   const directionOptions = ["all", "long", "short"];
   const resultOptions = ["all", "win", "loss"];
+  const tradePlatformOptions = ["all", "Bybit", "Pepperstone"];
 
   React.useEffect(() => {
     tradeModeFilterRef.current = tradeModeFilter;
@@ -148,6 +152,10 @@ export default function StreamPage() {
     resultFilterRef.current = resultFilter;
   }, [resultFilter]);
 
+  React.useEffect(() => {
+    tradePlatformFilterRef.current = tradePlatformFilter;
+  }, [tradePlatformFilter]);
+
   const loadMore = React.useCallback(async (overrideOffset?: number) => {
     if (loadingRef.current || !hasMoreRef.current) return;
     setLoading(true);
@@ -158,10 +166,12 @@ export default function StreamPage() {
       const currentTradeMode = tradeModeFilterRef.current;
       const currentDirection = directionFilterRef.current;
       const currentResult = resultFilterRef.current;
+      const currentTradePlatform = tradePlatformFilterRef.current;
       const requestKey = [
         `mode=${currentTradeMode}`,
         `dir=${currentDirection}`,
         `result=${currentResult}`,
+        `platform=${currentTradePlatform}`,
         `offset=${currentOffset}`,
       ].join("&");
       if (requestedRef.current.has(requestKey)) {
@@ -179,6 +189,9 @@ export default function StreamPage() {
       if (currentDirection !== "all") params.set("direction", currentDirection);
       if (currentResult !== "all") {
         params.set("result", currentResult);
+      }
+      if (currentTradePlatform !== "all") {
+        params.set("tradePlatform", currentTradePlatform);
       }
       const response = await fetch(
         `/api/trades/stream?${params.toString()}`,
@@ -226,12 +239,13 @@ export default function StreamPage() {
       `mode=${tradeModeFilter}`,
       `dir=${directionFilter}`,
       `result=${resultFilter}`,
+      `platform=${tradePlatformFilter}`,
       "offset=0",
     ].join("&");
     if (initialLoadKeys.has(initialKey)) return;
     initialLoadKeys.add(initialKey);
     void loadMore(0);
-  }, [directionFilter, loadMore, resultFilter, tradeModeFilter]);
+  }, [directionFilter, loadMore, resultFilter, tradeModeFilter, tradePlatformFilter]);
 
   React.useEffect(() => {
     if (!hasMore) return;
@@ -317,6 +331,22 @@ export default function StreamPage() {
                   </Select>
                 </div>
 
+                <div className="space-y-1">
+                  <Label className="text-xs text-zinc-400">Trade platform</Label>
+                  <Select value={tradePlatformFilter} onValueChange={setTradePlatformFilter}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tradePlatformOptions.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-end justify-end gap-2">
                   <Button
                     type="button"
@@ -326,6 +356,7 @@ export default function StreamPage() {
                       setTradeModeFilter("all");
                       setDirectionFilter("all");
                       setResultFilter("all");
+                      setTradePlatformFilter("all");
                     }}
                   >
                     Reset
@@ -381,6 +412,9 @@ export default function StreamPage() {
                   </span>
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
                     Mode: {trade.tradeMode}
+                  </span>
+                  <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                    Platform: {trade.tradePlatform ?? "—"}
                   </span>
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
                     PnL: {trade.pnlAmount}

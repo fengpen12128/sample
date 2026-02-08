@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 const tradeFormSchema = z.object({
   pnlAmount: z.string().min(1, "PnL amount is required"),
   symbol: z.string().min(1, "Symbol is required"),
+  tradePlatform: z.string().min(1, "Trade platform is required"),
   direction: z.string().min(1, "Direction is required"),
   result: z.string().min(1, "Result is required"),
   tradeMode: z.string().min(1, "Trade mode is required"),
@@ -83,6 +84,7 @@ export type TradeEditable = {
   trendAssessment: string | null;
   marketPhase: string | null;
   symbol: string;
+  tradePlatform: string | null;
   direction: string;
   result: string;
   tradeMode: string;
@@ -142,6 +144,7 @@ function TradeFormDialog({
     (): TradeFormValues => ({
       pnlAmount: initial?.pnlAmount !== undefined ? String(initial.pnlAmount) : "",
       symbol: initial?.symbol ?? "XAUUSD",
+      tradePlatform: initial?.tradePlatform ?? "Bybit",
       direction: initial?.direction ?? "long",
       result: initial?.result ?? "win",
       tradeMode: initial?.tradeMode ?? "live",
@@ -235,6 +238,7 @@ function TradeFormDialog({
     const parsedFields: Array<keyof TradeFormValues> = [
       "pnlAmount",
       "symbol",
+      "tradePlatform",
       "direction",
       "result",
       "tradeMode",
@@ -354,6 +358,10 @@ function TradeFormDialog({
     ["live", "demo"],
     initial?.tradeMode,
   );
+  const tradePlatformOptions = ensureOption(
+    ["Bybit", "Pepperstone"],
+    initial?.tradePlatform ?? undefined,
+  );
   const trendOptions = ensureOption(
     [
       "Strong Bull Trend",
@@ -400,6 +408,7 @@ function TradeFormDialog({
 
     formData.append("pnlAmount", data.pnlAmount);
     formData.append("symbol", data.symbol);
+    formData.append("tradePlatform", data.tradePlatform);
     formData.append("direction", data.direction);
     formData.append("result", data.result);
     formData.append("tradeMode", data.tradeMode);
@@ -512,6 +521,34 @@ function TradeFormDialog({
                       )}
                     />
                     {errors.symbol ? <FieldError>{errors.symbol.message}</FieldError> : null}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="tradePlatform">Trade platform</FieldLabel>
+                    <Controller
+                      name="tradePlatform"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger
+                            id="tradePlatform"
+                            className={selectTriggerClassName}
+                            onBlur={field.onBlur}
+                          >
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tradePlatformOptions.map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.tradePlatform ? (
+                      <FieldError>{errors.tradePlatform.message}</FieldError>
+                    ) : null}
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="direction">Direction</FieldLabel>
