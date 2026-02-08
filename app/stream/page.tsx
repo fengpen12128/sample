@@ -4,6 +4,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { PencilIcon } from "lucide-react";
+import type { PutBlobResult } from "@vercel/blob";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TradeReviewEditorDialog } from "@/components/trade-review-editor-dialog";
+import { updateTradeScreenshot } from "@/app/action";
 
 type StreamTrade = {
   id: number;
@@ -112,6 +115,78 @@ function ScreenshotViewer({
         </LiquidGlass>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ScreenshotUploadPlaceholder({
+  tradeId,
+  onUploaded,
+}: {
+  tradeId: number;
+  onUploaded: (url: string) => void;
+}) {
+  const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const inputId = React.useId();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleScreenshotUpload = async (file: File) => {
+    setUploading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/screenshot/upload?filename=${file.name}`, {
+        method: "POST",
+        body: file,
+      });
+      if (!response.ok) {
+        throw new Error("Upload failed. Please try again.");
+      }
+      const blob = (await response.json()) as PutBlobResult;
+      const formData = new FormData();
+      formData.append("id", String(tradeId));
+      formData.append("screenshotUrl", blob.url);
+      const result = await updateTradeScreenshot(formData);
+      if (!result?.ok) {
+        throw new Error(result?.error ?? "Save failed. Please try again.");
+      }
+      onUploaded(blob.url);
+      toast.success("Screenshot uploaded.");
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof Error ? uploadError.message : "Upload failed. Please try again.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <input
+        id={inputId}
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          event.target.value = "";
+          void handleScreenshotUpload(file);
+        }}
+      />
+      <label
+        htmlFor={inputId}
+        className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 bg-black/30 px-4 py-3 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+      >
+        <span className="text-sm font-medium text-zinc-200">
+          {uploading ? "Uploading..." : "Click to upload screenshot"}
+        </span>
+        <span>PNG / JPG / JPEG</span>
+        {error ? <span className="text-xs text-red-400">{error}</span> : null}
+      </label>
+    </div>
   );
 }
 
@@ -414,10 +489,16 @@ export default function StreamPage() {
                     Mode: {trade.tradeMode}
                   </span>
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
-                    Platform: {trade.tradePlatform ?? "—"}
+                    {trade.tradePlatform ?? "—"}
                   </span>
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
                     PnL: {trade.pnlAmount}
+                  </span>
+                  <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                    Entry Point: {trade.entryPoint}
+                  </span>
+                  <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                    Exit Point: {trade.closingPoint}
                   </span>
                   <span className="rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
                     Entry: {formatDateTime(trade.entryTime)}
@@ -435,9 +516,16 @@ export default function StreamPage() {
                       className="flex-1 min-h-0"
                     />
                   ) : (
-                    <div className="flex flex-1 items-center justify-center text-xs text-zinc-500">
-                      No screenshot
-                    </div>
+                    <ScreenshotUploadPlaceholder
+                      tradeId={trade.id}
+                      onUploaded={(url) => {
+                        setItems((prev) =>
+                          prev.map((item) =>
+                            item.id === trade.id ? { ...item, screenshotUrl: url } : item,
+                          ),
+                        );
+                      }}
+                    />
                   )}
                 </div>
               </article>

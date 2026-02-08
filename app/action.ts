@@ -229,6 +229,27 @@ export async function updateTradeReview(formData: FormData) {
   return { ok: true as const };
 }
 
+export async function updateTradeScreenshot(formData: FormData) {
+  const id = requiredInt(formData, "id");
+  if (id === null) {
+    return { ok: false as const, error: "Invalid id" };
+  }
+
+  const screenshotUrl = requiredString(formData, "screenshotUrl");
+  if (!screenshotUrl) {
+    return { ok: false as const, error: "Invalid screenshot url" };
+  }
+
+  await prisma.trade.update({
+    where: { id },
+    data: { screenshotUrl },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/stream");
+  return { ok: true as const };
+}
+
 export async function deleteTrade(formData: FormData) {
   const id = requiredInt(formData, "id");
   if (id === null) {

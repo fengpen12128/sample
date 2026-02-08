@@ -523,34 +523,6 @@ function TradeFormDialog({
                     {errors.symbol ? <FieldError>{errors.symbol.message}</FieldError> : null}
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="tradePlatform">Trade platform</FieldLabel>
-                    <Controller
-                      name="tradePlatform"
-                      control={control}
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger
-                            id="tradePlatform"
-                            className={selectTriggerClassName}
-                            onBlur={field.onBlur}
-                          >
-                            <SelectValue placeholder="Select..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {tradePlatformOptions.map((v) => (
-                              <SelectItem key={v} value={v}>
-                                {v}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.tradePlatform ? (
-                      <FieldError>{errors.tradePlatform.message}</FieldError>
-                    ) : null}
-                  </Field>
-                  <Field>
                     <FieldLabel htmlFor="direction">Direction</FieldLabel>
                     <Controller
                       name="direction"
@@ -630,7 +602,35 @@ function TradeFormDialog({
                     />
                     {errors.exitTime ? <FieldError>{errors.exitTime.message}</FieldError> : null}
                   </Field>
-                  <Field className="md:col-span-4">
+                  <Field className="md:col-span-2">
+                    <FieldLabel htmlFor="tradePlatform">Trade platform</FieldLabel>
+                    <Controller
+                      name="tradePlatform"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger
+                            id="tradePlatform"
+                            className={selectTriggerClassName}
+                            onBlur={field.onBlur}
+                          >
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tradePlatformOptions.map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.tradePlatform ? (
+                      <FieldError>{errors.tradePlatform.message}</FieldError>
+                    ) : null}
+                  </Field>
+                  <Field className="md:col-span-2">
                     <FieldLabel htmlFor="tradeMode">Trade mode</FieldLabel>
                     <Controller
                       name="tradeMode"
