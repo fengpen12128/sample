@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { PencilIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, PencilIcon } from "lucide-react";
 import type { PutBlobResult } from "@vercel/blob";
 import { toast } from "sonner";
 
@@ -118,6 +118,62 @@ function ScreenshotViewer({
   );
 }
 
+function PineScriptDialog({ trade }: { trade: StreamTrade }) {
+  const [copied, setCopied] = React.useState(false);
+  const copyTimerRef = React.useRef<number | null>(null);
+  const pineScript = React.useMemo(() => buildPineScript(trade), [trade]);
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button type="button" size="sm" variant="secondary">
+          Script
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="!w-[60vw] !max-w-none">
+        <DialogHeader>
+          <DialogTitle>Pine Script</DialogTitle>
+        </DialogHeader>
+        <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+          <div className="relative">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="absolute right-0 top-0 text-zinc-300 hover:bg-transparent hover:text-zinc-100"
+              aria-label="Copy script"
+              onClick={async () => {
+                await navigator.clipboard.writeText(pineScript);
+                setCopied(true);
+                if (copyTimerRef.current !== null) {
+                  window.clearTimeout(copyTimerRef.current);
+                }
+                copyTimerRef.current = window.setTimeout(() => {
+                  setCopied(false);
+                  copyTimerRef.current = null;
+                }, 1200);
+              }}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+            </Button>
+            <pre className="whitespace-pre-wrap pr-10 text-xs text-zinc-100">
+              {pineScript}
+            </pre>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ScreenshotUploadPlaceholder({
   tradeId,
   onUploaded,
@@ -188,6 +244,79 @@ function ScreenshotUploadPlaceholder({
       </label>
     </div>
   );
+}
+
+function buildPineScript(trade: StreamTrade) {
+  const tIn = new Date(trade.entryTime);
+  const tOut = new Date(trade.exitTime);
+  const isShort = String(trade.direction).trim().toLowerCase() === "short";
+  const isWin = String(trade.result).trim().toLowerCase() === "win";
+
+  const brokerTz = "GMT+8";
+  const fnCall = [
+    "    add_trade(",
+    [
+      tIn.getUTCFullYear(),
+      tIn.getUTCMonth() + 1,
+      tIn.getUTCDate(),
+      tIn.getUTCHours(),
+      tIn.getUTCMinutes(),
+      tIn.getUTCSeconds(),
+      cleanNum(trade.entryPoint),
+      cleanNum(trade.slPoint),
+      cleanNum(trade.tpPoint),
+      cleanNum(trade.closingPoint),
+      tOut.getUTCFullYear(),
+      tOut.getUTCMonth() + 1,
+      tOut.getUTCDate(),
+      tOut.getUTCHours(),
+      tOut.getUTCMinutes(),
+      tOut.getUTCSeconds(),
+      String(isShort),
+      String(isWin),
+    ].join(", "),
+    ")",
+  ].join("");
+
+  return [
+    "//@version=5",
+    'indicator("MT5极简箭头版 (时间修正)", overlay=true, max_lines_count=500)',
+    "",
+    "// 基础设置",
+    `string broker_tz = "${brokerTz}"`,
+    "",
+    "// 核心函数",
+    "add_trade(y, m, d, h, min, s, entry, sl, tp, exit, out_y, out_m, out_d, out_h, out_min, out_s, is_short, is_win) =>",
+    "    t1 = timestamp(broker_tz, y, m, d, h, min, s)",
+    "    t2 = timestamp(broker_tz, out_y, out_m, out_d, out_h, out_min, out_s)",
+    "",
+    "    // 颜色配置：线条赢=绿色，输=紫色；箭头固定黄色",
+    "    color tradeColor = is_win ? #00FF00 : #800080",
+    "",
+    "    // 1. 使用 label 模拟箭头 (解决 plotshape 不支持时间定位的问题)",
+    "    label.new(x=t1, y=entry,",
+    '         text="",',
+    "         xloc=xloc.bar_time,",
+    "         style=is_short ? label.style_arrowdown : label.style_arrowup,",
+    "         color=#FFFF00,",
+    "         size=size.large)",
+    "",
+    "    // 2. 绘制交易斜线",
+    "    line.new(x1=t1, y1=entry, x2=t2, y2=exit, xloc=xloc.bar_time,",
+    "             color=tradeColor, width=7)",
+    "",
+    "// ==========================================",
+    "// ============== 数据录入区 ================",
+    "// ==========================================",
+    "if barstate.islast",
+    "    // === 粘贴区开始 ===",
+    fnCall,
+  ].join("\n");
+}
+
+function cleanNum(value: number | null | undefined) {
+  if (value === null || value === undefined) return "0.0";
+  return Number.isFinite(value) ? String(value) : "0.0";
 }
 
 export default function StreamPage() {
@@ -449,7 +578,8 @@ export default function StreamPage() {
 	              className="min-h-[100svh] snap-start py-6"
 	            >
 	              <article className="relative h-[calc(100svh-3rem)] w-full rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 text-left flex flex-col">
-	                <div className="absolute right-3 top-3">
+                <div className="absolute right-3 top-3 flex items-center gap-2">
+                  <PineScriptDialog trade={trade} />
 	                  <TradeReviewEditorDialog
 	                    tradeId={trade.id}
 	                    screenshotUrl={trade.screenshotUrl}
