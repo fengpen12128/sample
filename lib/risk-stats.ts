@@ -35,12 +35,15 @@ export function normalizeRiskSeries(
   trades: TradeRiskInput[],
   fallbackRiskPoints: number = DEFAULT_RISK_POINTS,
   labelMode: "date" | "index" = "date",
+  sortOrder: "asc" | "desc" = "asc",
 ): RiskSeriesPoint[] {
   const sorted = [...trades].sort((a, b) => {
     const aTime = new Date(a.entryTime).getTime();
     const bTime = new Date(b.entryTime).getTime();
-    if (aTime !== bTime) return aTime - bTime;
-    return a.id - b.id;
+    const timeDiff = aTime - bTime;
+    if (timeDiff !== 0) return sortOrder === "desc" ? -timeDiff : timeDiff;
+    const idDiff = a.id - b.id;
+    return sortOrder === "desc" ? -idDiff : idDiff;
   });
 
   return sorted

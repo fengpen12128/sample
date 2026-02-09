@@ -48,7 +48,7 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
   const fallbackRiskPoints = parseNumberWithFallback(fallbackRiskInput, 20);
 
   const series = React.useMemo(
-    () => normalizeRiskSeries(trades, fallbackRiskPoints, "date"),
+    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "desc"),
     [trades, fallbackRiskPoints],
   );
 
