@@ -177,9 +177,12 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
                   labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value: number | null) =>
-                    value === null ? ["N/A", "Rolling avg"] : [`${value.toFixed(2)}R`, "Rolling avg"]
-                  }
+                  formatter={(value) => {
+                    if (typeof value !== "number") {
+                      return ["N/A", "Rolling avg"];
+                    }
+                    return [`${value.toFixed(2)}R`, "Rolling avg"];
+                  }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#34d399" strokeWidth={2} dot={false} />
               </LineChart>
@@ -202,9 +205,12 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
                   labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value: number | null) =>
-                    value === null ? ["N/A", "Win/Loss ratio"] : [value.toFixed(2), "Win/Loss ratio"]
-                  }
+                  formatter={(value) => {
+                    if (typeof value !== "number") {
+                      return ["N/A", "Win/Loss ratio"];
+                    }
+                    return [value.toFixed(2), "Win/Loss ratio"];
+                  }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#f472b6" strokeWidth={2} dot={false} />
               </LineChart>
