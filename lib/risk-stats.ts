@@ -9,6 +9,8 @@ export type TradeRiskInput = {
   pnlAmount: number;
 };
 
+import { formatWallClockYmd } from "@/lib/wall-clock-datetime";
+
 export type RiskSeriesPoint = {
   id: number;
   date: Date;
@@ -201,36 +203,9 @@ function resolveRMultiple(
   trade: TradeRiskInput,
   fallbackRiskPoints: number,
 ): number | null {
-  if (Number.isFinite(trade.pnlAmount) && fallbackRiskPoints > 0) {
-    return trade.pnlAmount / fallbackRiskPoints;
-  }
-  if (trade.actualRMultiple !== null && Number.isFinite(trade.actualRMultiple)) {
-    return trade.actualRMultiple;
-  }
-
-  const entry = trade.entryPoint;
-  const close = trade.closingPoint;
-  const direction = trade.direction.trim().toLowerCase();
-
-  let riskPoints: number | null = null;
-  if (trade.slPoint !== null && Number.isFinite(trade.slPoint)) {
-    const slDistance = Math.abs(entry - trade.slPoint);
-    if (slDistance > 0) {
-      riskPoints = slDistance;
-    }
-  }
-  if (riskPoints === null) {
-    const fallback = Number.isFinite(fallbackRiskPoints) ? fallbackRiskPoints : DEFAULT_RISK_POINTS;
-    if (fallback > 0) {
-      riskPoints = fallback;
-    }
-  }
-  if (riskPoints === null || riskPoints <= 0) return null;
-
-  if (direction === "short") {
-    return (entry - close) / riskPoints;
-  }
-  return (close - entry) / riskPoints;
+  if (!Number.isFinite(trade.pnlAmount)) return null;
+  if (fallbackRiskPoints <= 0) return null;
+  return trade.pnlAmount / fallbackRiskPoints;
 }
 
 function getWindowStart(index: number, windowSize: number | null): number {
@@ -239,10 +214,8 @@ function getWindowStart(index: number, windowSize: number | null): number {
 }
 
 function formatDateLabel(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const label = formatWallClockYmd(date);
+  return label || "";
 }
 
 function buildBuckets(edges: number[]): Array<{ min: number; max: number; label: string }> {
