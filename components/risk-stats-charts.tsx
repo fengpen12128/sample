@@ -139,9 +139,12 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
                   labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value: number | null) =>
-                    value === null ? ["N/A", "Max loss"] : [`${value.toFixed(2)}R`, "Max loss"]
-                  }
+                  formatter={(value) => {
+                    if (value == null || typeof value !== "number") {
+                      return ["N/A", "Max loss"];
+                    }
+                    return [`${value.toFixed(2)}R`, "Max loss"];
+                  }}
                 />
                 <ReferenceLine
                   y={threshold}
@@ -177,9 +180,12 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
                   labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value: number | null) =>
-                    value === null ? ["N/A", "Bottom 10% avg"] : [`${value.toFixed(2)}R`, "Bottom 10% avg"]
-                  }
+                  formatter={(value) => {
+                    if (value == null || typeof value !== "number") {
+                      return ["N/A", "Bottom 10% avg"];
+                    }
+                    return [`${value.toFixed(2)}R`, "Bottom 10% avg"];
+                  }}
                 />
                 <Line
                   type="monotone"
