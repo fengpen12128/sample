@@ -86,6 +86,9 @@ export default async function Home({ searchParams }: PageProps) {
           >
             <Link href="/stream">Infinite Stream</Link>
           </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/stats">Risk Stats</Link>
+          </Button>
         </div>
         <Table className="rounded-lg border border-zinc-900 bg-zinc-950/30 table-fixed">
           <TableCaption>
