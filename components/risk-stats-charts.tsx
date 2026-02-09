@@ -112,7 +112,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Fallback risk points</Label>
+              <Label className="text-xs text-zinc-400">Risk per trade (PnL)</Label>
               <Input
                 value={fallbackRiskInput}
                 onChange={(event) => setFallbackRiskInput(event.target.value)}

@@ -17,6 +17,7 @@ export default async function StatsPage() {
       closingPoint: true,
       slPoint: true,
       actualRMultiple: true,
+      pnlAmount: true,
     },
   });
 

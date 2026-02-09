@@ -6,6 +6,7 @@ export type TradeRiskInput = {
   closingPoint: number;
   slPoint: number | null;
   actualRMultiple: number | null;
+  pnlAmount: number;
 };
 
 export type RiskSeriesPoint = {
@@ -131,6 +132,9 @@ function resolveRMultiple(
   trade: TradeRiskInput,
   fallbackRiskPoints: number,
 ): number | null {
+  if (Number.isFinite(trade.pnlAmount) && fallbackRiskPoints > 0) {
+    return trade.pnlAmount / fallbackRiskPoints;
+  }
   if (trade.actualRMultiple !== null && Number.isFinite(trade.actualRMultiple)) {
     return trade.actualRMultiple;
   }
