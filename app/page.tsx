@@ -16,7 +16,10 @@ import { TradeExportAllButton } from "@/components/trade-export-all";
 import { TradeCreateDialog } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
 type TradeRow = Awaited<ReturnType<typeof prisma.trade.findMany>>[number];
@@ -26,12 +29,59 @@ function formatDateTime(value: Date | null) {
   return formatWallClockYmdHms(value) || "—";
 }
 
+function getSingleParam(value: string | string[] | undefined) {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return value[0]?.trim() ?? "";
+  return "";
+}
+
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function Home({ searchParams }: PageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const errorParam = resolvedSearchParams?.error;
+  const error =
+    typeof errorParam === "string"
+      ? errorParam
+      : Array.isArray(errorParam)
+        ? errorParam[0]
+        : null;
+
+  const resultFilter = getSingleParam(resolvedSearchParams?.result);
+  const tradePlatformFilter = getSingleParam(resolvedSearchParams?.tradePlatform);
+  const liveModeFilter = getSingleParam(resolvedSearchParams?.tradeMode);
+
+  const whereFilters = [
+    resultFilter
+      ? {
+          result: {
+            contains: resultFilter,
+            mode: "insensitive" as const,
+          },
+        }
+      : null,
+    tradePlatformFilter
+      ? {
+          tradePlatform: {
+            contains: tradePlatformFilter,
+            mode: "insensitive" as const,
+          },
+        }
+      : null,
+    liveModeFilter
+      ? {
+          tradeMode: {
+            contains: liveModeFilter,
+            mode: "insensitive" as const,
+          },
+        }
+      : null,
+  ].filter(Boolean) as Prisma.TradeWhereInput[];
+
   const trades: TradeRow[] = await prisma.trade.findMany({
+    where: whereFilters.length ? { AND: whereFilters } : undefined,
     orderBy: [{ entryTime: "desc" }, { id: "desc" }],
   });
   const exportTrades = trades.map((t) => ({
@@ -63,15 +113,6 @@ export default async function Home({ searchParams }: PageProps) {
     screenshotUrl: t.screenshotUrl,
   }));
 
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const errorParam = resolvedSearchParams?.error;
-  const error =
-    typeof errorParam === "string"
-      ? errorParam
-      : Array.isArray(errorParam)
-        ? errorParam[0]
-        : null;
-
   return (
     <main className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto w-full lg:w-[70%] max-w-none">
@@ -89,6 +130,47 @@ export default async function Home({ searchParams }: PageProps) {
           <Button asChild size="sm" variant="outline">
             <Link href="/stats">Risk Stats</Link>
           </Button>
+        </div>
+        <div className="mb-4 rounded-lg border border-zinc-900 bg-zinc-950/30 px-4 py-3">
+          <form className="space-y-3" method="get">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Result</Label>
+                <Input
+                  name="result"
+                  defaultValue={resultFilter}
+                  placeholder="e.g. Win"
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Trade platform</Label>
+                <Input
+                  name="tradePlatform"
+                  defaultValue={tradePlatformFilter}
+                  placeholder="e.g. MT5"
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Live mode</Label>
+                <Input
+                  name="tradeMode"
+                  defaultValue={liveModeFilter}
+                  placeholder="e.g. Live"
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Button size="sm" type="submit">
+                Search
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/">Clear</Link>
+              </Button>
+            </div>
+          </form>
         </div>
         <Table className="rounded-lg border border-zinc-900 bg-zinc-950/30 table-fixed">
           <TableCaption>

@@ -34,14 +34,14 @@ export function normalizeRiskSeries(
   });
 
   return sorted
-    .map((trade) => {
+    .map((trade, index) => {
       const date = new Date(trade.entryTime);
       const r = resolveRMultiple(trade, fallbackRiskPoints);
       if (r === null) return null;
       return {
         id: trade.id,
         date,
-        label: formatDateLabel(date),
+        label: String(index + 1),
         r,
       };
     })
