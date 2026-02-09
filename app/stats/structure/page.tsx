@@ -3,10 +3,10 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { RiskStatsCharts } from "@/components/risk-stats-charts";
+import { StructureStatsCharts } from "@/components/structure-stats-charts";
 import { prisma } from "@/lib/prisma";
 
-export default async function StatsPage() {
+export default async function StructureStatsPage() {
   const trades = await prisma.trade.findMany({
     orderBy: [{ entryTime: "asc" }, { id: "asc" }],
     select: {
@@ -31,9 +31,9 @@ export default async function StatsPage() {
       <div className="mx-auto w-full lg:w-[70%] max-w-none space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-zinc-100">Risk Stats</h1>
+            <h1 className="text-xl font-semibold text-zinc-100">Structure Stats</h1>
             <p className="text-sm text-zinc-400">
-              Daily self-check for left-tail risk control.
+              System structure recognition against long-term baseline.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -41,14 +41,11 @@ export default async function StatsPage() {
               <Link href="/">Back to Table</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/stream">Infinite Stream</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/stats/structure">Structure Stats</Link>
+              <Link href="/stats">Risk Stats</Link>
             </Button>
           </div>
         </div>
-        <RiskStatsCharts trades={chartTrades} />
+        <StructureStatsCharts trades={chartTrades} />
       </div>
     </main>
   );

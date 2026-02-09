@@ -16,6 +16,12 @@ export type RiskSeriesPoint = {
   r: number;
 };
 
+export type HistogramComparisonDatum = {
+  bin: string;
+  base: number;
+  recent: number;
+};
+
 export type RiskHistogramBucket = {
   bucket: string;
   count: number;
@@ -26,6 +32,7 @@ const DEFAULT_RISK_POINTS = 20;
 export function normalizeRiskSeries(
   trades: TradeRiskInput[],
   fallbackRiskPoints: number = DEFAULT_RISK_POINTS,
+  labelMode: "date" | "index" = "date",
 ): RiskSeriesPoint[] {
   const sorted = [...trades].sort((a, b) => {
     const aTime = new Date(a.entryTime).getTime();
@@ -39,10 +46,12 @@ export function normalizeRiskSeries(
       const date = new Date(trade.entryTime);
       const r = resolveRMultiple(trade, fallbackRiskPoints);
       if (r === null) return null;
+      const label =
+        labelMode === "index" ? String(index + 1) : formatDateLabel(date);
       return {
         id: trade.id,
         date,
-        label: String(index + 1),
+        label,
         r,
       };
     })
@@ -128,6 +137,66 @@ export function calculateLossHistogram(
   }));
 }
 
+export function calculateDistributionComparison(
+  series: RiskSeriesPoint[],
+  recentWindow: number | null,
+  rangeMin: number,
+  rangeMax: number,
+  binCount: number,
+  mode: "count" | "density",
+): HistogramComparisonDatum[] {
+  if (!series.length) return [];
+  if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax) || rangeMin >= rangeMax) {
+    return [];
+  }
+  if (!Number.isFinite(binCount) || binCount <= 0) return [];
+
+  const allValues = series.map((entry) => entry.r);
+  const recentStart = getWindowStart(series.length - 1, recentWindow);
+  const recentValues = series.slice(recentStart).map((entry) => entry.r);
+
+  const base = buildHistogram(allValues, rangeMin, rangeMax, binCount, mode);
+  const recent = buildHistogram(recentValues, rangeMin, rangeMax, binCount, mode);
+
+  return base.map((bucket, index) => ({
+    bin: bucket.label,
+    base: bucket.value,
+    recent: recent[index]?.value ?? 0,
+  }));
+}
+
+export function calculateRollingAverageR(
+  series: RiskSeriesPoint[],
+  windowSize: number | null,
+): Array<{ x: string; value: number | null }> {
+  return series.map((point, index) => {
+    const windowStart = getWindowStart(index, windowSize);
+    const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
+    if (!windowValues.length) return { x: point.label, value: null };
+    const sum = windowValues.reduce((acc, value) => acc + value, 0);
+    return { x: point.label, value: sum / windowValues.length };
+  });
+}
+
+export function calculateRollingWinLossRatio(
+  series: RiskSeriesPoint[],
+  windowSize: number | null,
+): Array<{ x: string; value: number | null }> {
+  return series.map((point, index) => {
+    const windowStart = getWindowStart(index, windowSize);
+    const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
+    const wins = windowValues.filter((value) => value > 0);
+    const losses = windowValues.filter((value) => value < 0);
+    if (!wins.length || !losses.length) {
+      return { x: point.label, value: null };
+    }
+    const avgWin = wins.reduce((acc, value) => acc + value, 0) / wins.length;
+    const avgLoss = losses.reduce((acc, value) => acc + value, 0) / losses.length;
+    if (avgLoss === 0) return { x: point.label, value: null };
+    return { x: point.label, value: avgWin / Math.abs(avgLoss) };
+  });
+}
+
 function resolveRMultiple(
   trade: TradeRiskInput,
   fallbackRiskPoints: number,
@@ -201,4 +270,34 @@ function buildBuckets(edges: number[]): Array<{ min: number; max: number; label:
 function formatRiskValue(value: number): string {
   if (Number.isInteger(value)) return String(value);
   return value.toFixed(2).replace(/\.00$/, "");
+}
+
+function buildHistogram(
+  values: number[],
+  rangeMin: number,
+  rangeMax: number,
+  binCount: number,
+  mode: "count" | "density",
+): Array<{ label: string; value: number }> {
+  const width = (rangeMax - rangeMin) / binCount;
+  const counts = Array.from({ length: binCount }, () => 0);
+
+  values.forEach((value) => {
+    if (value < rangeMin || value > rangeMax) return;
+    const rawIndex = Math.floor((value - rangeMin) / width);
+    const index = Math.min(Math.max(rawIndex, 0), binCount - 1);
+    counts[index] += 1;
+  });
+
+  const total = counts.reduce((acc, value) => acc + value, 0);
+  return counts.map((count, index) => {
+    const min = rangeMin + index * width;
+    const max = min + width;
+    const label = `${formatRiskValue(min)}R ~ ${formatRiskValue(max)}R`;
+    if (mode === "density") {
+      const density = total > 0 ? count / (total * width) : 0;
+      return { label, value: density };
+    }
+    return { label, value: count };
+  });
 }

@@ -130,6 +130,9 @@ export default async function Home({ searchParams }: PageProps) {
           <Button asChild size="sm" variant="outline">
             <Link href="/stats">Risk Stats</Link>
           </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/stats/structure">Structure Stats</Link>
+          </Button>
         </div>
         <div className="mb-4 rounded-lg border border-zinc-900 bg-zinc-950/30 px-4 py-3">
           <form className="space-y-3" method="get">
@@ -185,52 +188,27 @@ export default async function Home({ searchParams }: PageProps) {
             </div>
           </TableCaption>
 
-	          <TableHeader>
-	            <TableRow>
-	              <TableHead className="w-[70px]">ID</TableHead>
-	              <TableHead className="w-[110px]">PnL amount</TableHead>
-	              <TableHead className="w-[120px]">Entry Point</TableHead>
-	              <TableHead className="w-[120px]">Exit Point</TableHead>
-	              <TableHead className="w-[110px]">Symbol</TableHead>
-	              <TableHead className="w-[90px]">Direction</TableHead>
-	              <TableHead className="w-[90px]">Result</TableHead>
-	              <TableHead className="w-[150px]">Entry time</TableHead>
-	              <TableHead className="w-[150px]">Exit time</TableHead>
-	              <TableHead className="w-[70px]">Actions</TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="sticky left-0 z-20 w-[70px] bg-zinc-950/30">
+                Actions
+              </TableHead>
+              <TableHead className="w-[70px]">ID</TableHead>
+              <TableHead className="w-[110px]">PnL amount</TableHead>
+              <TableHead className="w-[120px]">Entry Point</TableHead>
+              <TableHead className="w-[120px]">Exit Point</TableHead>
+              <TableHead className="w-[110px]">Symbol</TableHead>
+              <TableHead className="w-[90px]">Direction</TableHead>
+              <TableHead className="w-[90px]">Result</TableHead>
+              <TableHead className="w-[150px]">Entry time</TableHead>
+              <TableHead className="w-[150px]">Exit time</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {trades.map((t) => (
               <TableRow key={t.id}>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-300">
-                  #{t.id}
-                </TableCell>
-	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-	                  {t.pnlAmount}
-	                </TableCell>
-	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-	                  {t.entryPoint}
-	                </TableCell>
-	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-	                  {t.closingPoint}
-	                </TableCell>
-	                <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
-	                  {t.symbol}
-	                </TableCell>
-	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-	                  {t.direction}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {t.result}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {formatDateTime(t.entryTime)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                  {formatDateTime(t.exitTime)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
+                <TableCell className="sticky left-0 z-10 whitespace-nowrap bg-zinc-950/30">
                   <TradeRowActions
                     trade={{
                       id: t.id,
@@ -261,6 +239,33 @@ export default async function Home({ searchParams }: PageProps) {
                       screenshotUrl: t.screenshotUrl,
                     }}
                   />
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-300">
+                  #{t.id}
+                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.pnlAmount}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.entryPoint}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.closingPoint}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
+	                  {t.symbol}
+	                </TableCell>
+	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+	                  {t.direction}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {t.result}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {formatDateTime(t.entryTime)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
+                  {formatDateTime(t.exitTime)}
                 </TableCell>
               </TableRow>
             ))}

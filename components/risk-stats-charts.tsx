@@ -32,14 +32,13 @@ type RiskStatsChartsProps = {
 const DEFAULT_BUCKETS = "-0.5,-1,-1.5,-2,-3";
 
 export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
-  const [windowSizeInput, setWindowSizeInput] = React.useState("");
-  const [histogramWindowInput, setHistogramWindowInput] = React.useState("100");
   const [thresholdInput, setThresholdInput] = React.useState("-1.5");
   const [bucketInput, setBucketInput] = React.useState(DEFAULT_BUCKETS);
   const [fallbackRiskInput, setFallbackRiskInput] = React.useState("20");
 
-  const windowSize = parseNullableInt(windowSizeInput);
-  const histogramWindow = parseNullableInt(histogramWindowInput);
+  const rollingMaxWindow = 20;
+  const bottomLossWindow = 30;
+  const histogramWindow = 100;
   const threshold = parseNumberWithFallback(thresholdInput, -1.5);
   const bucketEdges = parseBucketEdges(bucketInput);
   const fallbackRiskPoints = parseNumberWithFallback(fallbackRiskInput, 20);
@@ -48,20 +47,32 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
     () => normalizeRiskSeries(trades, fallbackRiskPoints),
     [trades, fallbackRiskPoints],
   );
+  const recentRollingSeries = React.useMemo(() => series.slice(-rollingMaxWindow), [series]);
+  const recentBottomSeries = React.useMemo(() => series.slice(-bottomLossWindow), [series]);
+  const recentHistogramSeries = React.useMemo(() => series.slice(-histogramWindow), [series]);
 
   const rollingMaxLoss = React.useMemo(
-    () => calculateRollingMaxLoss(series, windowSize),
-    [series, windowSize],
+    () => calculateRollingMaxLoss(recentRollingSeries, rollingMaxWindow),
+    [recentRollingSeries],
+  );
+  const rollingMaxLossChart = React.useMemo(
+    () =>
+      rollingMaxLoss.map((point) => ({
+        ...point,
+        value: point.value === null ? null : Math.abs(point.value),
+      })),
+    [rollingMaxLoss],
   );
 
   const bottomLossAvg = React.useMemo(
-    () => calculateBottomLossAverage(series, windowSize, 0.1),
-    [series, windowSize],
+    () => calculateBottomLossAverage(recentBottomSeries, bottomLossWindow, 0.1),
+    [recentBottomSeries],
   );
+  const maxLossThreshold = Math.abs(threshold);
 
   const histogram = React.useMemo(
-    () => calculateLossHistogram(series, histogramWindow, bucketEdges),
-    [series, histogramWindow, bucketEdges],
+    () => calculateLossHistogram(recentHistogramSeries, histogramWindow, bucketEdges),
+    [recentHistogramSeries, bucketEdges],
   );
 
   return (
@@ -73,23 +84,33 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Rolling window (N)</Label>
+              <Label className="text-xs text-zinc-400">Rolling max window (fixed)</Label>
               <Input
-                value={windowSizeInput}
-                onChange={(event) => setWindowSizeInput(event.target.value)}
-                placeholder="All"
+                value="20"
+                placeholder="20"
                 inputMode="numeric"
                 className="h-8 text-xs"
+                disabled
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Histogram window</Label>
+              <Label className="text-xs text-zinc-400">Bottom 10% window (fixed)</Label>
               <Input
-                value={histogramWindowInput}
-                onChange={(event) => setHistogramWindowInput(event.target.value)}
+                value="30"
+                placeholder="30"
+                inputMode="numeric"
+                className="h-8 text-xs"
+                disabled
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-400">Histogram window (fixed)</Label>
+              <Input
+                value="100"
                 placeholder="100"
                 inputMode="numeric"
                 className="h-8 text-xs"
+                disabled
               />
             </div>
             <div className="space-y-1.5">
@@ -132,7 +153,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         <CardContent>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={rollingMaxLoss} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
+              <LineChart data={rollingMaxLossChart} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="x" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -143,15 +164,15 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                     if (value == null || typeof value !== "number") {
                       return ["N/A", "Max loss"];
                     }
-                    return [`${value.toFixed(2)}R`, "Max loss"];
+                    return [`-${value.toFixed(2)}R`, "Max loss"];
                   }}
                 />
                 <ReferenceLine
-                  y={threshold}
+                  y={maxLossThreshold}
                   stroke="#f97316"
                   strokeDasharray="6 6"
                   ifOverflow="extendDomain"
-                  label={{ value: `${threshold.toFixed(2)}R`, fill: "#f97316", fontSize: 12 }}
+                  label={{ value: `-${maxLossThreshold.toFixed(2)}R`, fill: "#f97316", fontSize: 12 }}
                 />
                 <Line
                   type="monotone"
