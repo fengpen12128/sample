@@ -151,8 +151,8 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
           <CardTitle>Rolling Max Loss</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <LineChart data={rollingMaxLossChart} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="x" tick={{ fontSize: 12 }} />
@@ -192,8 +192,8 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
           <CardTitle>Bottom 10% Loss Average</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <LineChart data={bottomLossAvg} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="x" tick={{ fontSize: 12 }} />
@@ -226,8 +226,8 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
           <CardTitle>Loss Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <BarChart data={histogram} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />

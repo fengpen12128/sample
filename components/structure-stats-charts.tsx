@@ -167,8 +167,8 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
           <CardTitle>R Distribution Comparison</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={300} minWidth={0}>
               <BarChart
                 data={distribution}
                 margin={{ top: 12, right: 16, left: 0, bottom: 0 }}
@@ -199,8 +199,8 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
             <div>Healthy zone ≥ +0.15R</div>
             <div>Ideal zone +0.20R ~ +0.30R</div>
           </div>
-          <div className="min-h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <LineChart
                 data={rollingAverage}
                 margin={{ top: 12, right: 16, left: 0, bottom: 0 }}
@@ -233,8 +233,8 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
           <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
             <div>Ideal zone 1.20 ~ 1.50</div>
           </div>
-          <div className="min-h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <LineChart data={winLossRatio} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="x" tick={{ fontSize: 12 }} />
@@ -261,8 +261,8 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
           <CardTitle>Profit vs Loss Total (Recent N)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="min-h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <PieChart margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
