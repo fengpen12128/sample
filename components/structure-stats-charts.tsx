@@ -164,8 +164,12 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
         <CardHeader>
           <CardTitle>Rolling Average R</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px] w-full">
+        <CardContent className="relative">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+            <div>Healthy zone ≥ +0.15R</div>
+            <div>Ideal zone +0.20R ~ +0.30R</div>
+          </div>
+          <div className="min-h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={rollingAverage}
@@ -195,8 +199,11 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
         <CardHeader>
           <CardTitle>Win R / Loss R Ratio</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px] w-full">
+        <CardContent className="relative">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+            <div>Ideal zone 1.20 ~ 1.50</div>
+          </div>
+          <div className="min-h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={winLossRatio} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
