@@ -7,10 +7,13 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  Cell,
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +77,33 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
     () => calculateRollingWinLossRatio(series, windowSize),
     [series, windowSize],
   );
+
+  const pieData = React.useMemo(() => {
+    const sorted = [...trades].sort((a, b) => {
+      const aTime = new Date(a.entryTime).getTime();
+      const bTime = new Date(b.entryTime).getTime();
+      if (aTime !== bTime) return bTime - aTime;
+      return b.id - a.id;
+    });
+    const windowed =
+      windowSize && windowSize > 0 ? sorted.slice(0, windowSize) : sorted;
+    const totals = windowed.reduce(
+      (acc, trade) => {
+        const value = Number.isFinite(trade.pnlAmount) ? trade.pnlAmount : 0;
+        if (value >= 0) {
+          acc.profit += value;
+        } else {
+          acc.loss += Math.abs(value);
+        }
+        return acc;
+      },
+      { profit: 0, loss: 0 },
+    );
+    return [
+      { name: "Profit total", value: totals.profit },
+      { name: "Loss total", value: totals.loss },
+    ];
+  }, [trades, windowSize]);
 
   return (
     <div className="space-y-6">
@@ -221,6 +251,43 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                 />
                 <Line type="monotone" dataKey="value" stroke="#f472b6" strokeWidth={2} dot={false} />
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-zinc-800 bg-zinc-950/40">
+        <CardHeader>
+          <CardTitle>Profit vs Loss Total (Recent N)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="min-h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
+                  labelStyle={{ color: "#e4e4e7" }}
+                  formatter={(value) => {
+                    if (typeof value !== "number") return ["N/A", "Total"];
+                    return [value.toFixed(2), "Total"];
+                  }}
+                />
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius="45%"
+                  outerRadius="75%"
+                  paddingAngle={2}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${entry.name}`}
+                      fill={index === 0 ? "#22c55e" : "#ef4444"}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
