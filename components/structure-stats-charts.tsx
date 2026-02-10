@@ -105,6 +105,11 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
     ];
   }, [trades, windowSize]);
 
+  const pieTotal = React.useMemo(
+    () => pieData.reduce((acc, item) => acc + item.value, 0),
+    [pieData],
+  );
+
   return (
     <div className="space-y-6">
       <Card className="border-zinc-800 bg-zinc-950/40">
@@ -265,11 +270,20 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
             <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <PieChart margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
-                  labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value) => {
-                    if (typeof value !== "number") return ["N/A", "Total"];
-                    return [value.toFixed(2), "Total"];
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const entry = payload[0];
+                    const rawValue = typeof entry.value === "number" ? entry.value : 0;
+                    const percent =
+                      pieTotal > 0 ? `${((rawValue / pieTotal) * 100).toFixed(1)}%` : "0%";
+                    return (
+                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                        <div className="font-medium">{entry.name ?? "Total"}</div>
+                        <div className="text-zinc-200">
+                          {rawValue.toFixed(2)} ({percent})
+                        </div>
+                      </div>
+                    );
                   }}
                 />
                 <Pie
