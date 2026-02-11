@@ -3,13 +3,21 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
-import { generateSnowflakeId } from "@/lib/snowflake-id";
 import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
 function requiredId(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
   return raw || null;
+}
+
+function parseTradeId(raw: string | null) {
+  if (!raw) return null;
+  try {
+    return BigInt(raw);
+  } catch {
+    return null;
+  }
 }
 
 function requiredString(formData: FormData, key: string) {
@@ -182,10 +190,7 @@ export async function createTrade(formData: FormData) {
   }
 
   await prisma.trade.create({
-    data: {
-      id: await generateSnowflakeId(),
-      ...parsed.data,
-    },
+    data: parsed.data,
   });
 
   revalidatePath("/");
@@ -196,7 +201,7 @@ export async function createTrade(formData: FormData) {
 export async function updateTrade(formData: FormData) {
   await ensureTradeIdStorage();
 
-  const id = requiredId(formData, "id");
+  const id = parseTradeId(requiredId(formData, "id"));
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -219,7 +224,7 @@ export async function updateTrade(formData: FormData) {
 export async function updateTradeReview(formData: FormData) {
   await ensureTradeIdStorage();
 
-  const id = requiredId(formData, "id");
+  const id = parseTradeId(requiredId(formData, "id"));
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -240,7 +245,7 @@ export async function updateTradeReview(formData: FormData) {
 export async function updateTradeScreenshot(formData: FormData) {
   await ensureTradeIdStorage();
 
-  const id = requiredId(formData, "id");
+  const id = parseTradeId(requiredId(formData, "id"));
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -263,7 +268,7 @@ export async function updateTradeScreenshot(formData: FormData) {
 export async function deleteTrade(formData: FormData) {
   await ensureTradeIdStorage();
 
-  const id = requiredId(formData, "id");
+  const id = parseTradeId(requiredId(formData, "id"));
   if (id === null) {
     return;
   }

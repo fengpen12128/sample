@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { generateSnowflakeId } from "@/lib/snowflake-id";
 import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { parseTradeImageFromBuffer } from "@/lib/trade-image-parse";
 import { downloadTelegramFile, getTelegramFile, sendTelegramMessage } from "@/lib/telegram";
@@ -191,7 +190,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     await prisma.trade.create({
       data: {
-        id: await generateSnowflakeId(),
         timeframe: parseString(parsed.timeframe),
         trendAssessment: parseString(parsed.trendAssessment),
         marketPhase: parseString(parsed.marketPhase),

@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 
   const payload = {
     items: items.map((t) => ({
-      id: t.id,
+      id: String(t.id),
       timeframe: t.timeframe,
       trendAssessment: t.trendAssessment,
       marketPhase: t.marketPhase,

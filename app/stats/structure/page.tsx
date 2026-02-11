@@ -26,6 +26,7 @@ export default async function StructureStatsPage() {
 
   const chartTrades = trades.map((trade) => ({
     ...trade,
+    id: String(trade.id),
     entryTime: trade.entryTime.toISOString(),
   }));
 

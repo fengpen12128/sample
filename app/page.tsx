@@ -89,7 +89,7 @@ export default async function Home({ searchParams }: PageProps) {
     orderBy: [{ entryTime: "desc" }, { id: "desc" }],
   });
   const exportTrades = trades.map((t) => ({
-    id: t.id,
+    id: String(t.id),
     timeframe: t.timeframe,
     trendAssessment: t.trendAssessment,
     marketPhase: t.marketPhase,
@@ -212,11 +212,11 @@ export default async function Home({ searchParams }: PageProps) {
 
           <TableBody>
             {trades.map((t) => (
-              <TableRow key={t.id}>
+              <TableRow key={String(t.id)}>
                 <TableCell className="sticky left-0 z-10 whitespace-nowrap bg-zinc-950/30">
                   <TradeRowActions
                     trade={{
-                      id: t.id,
+                      id: String(t.id),
                       timeframe: t.timeframe,
                       trendAssessment: t.trendAssessment,
                       marketPhase: t.marketPhase,
@@ -246,7 +246,7 @@ export default async function Home({ searchParams }: PageProps) {
                   />
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-zinc-300">
-                  #{t.id}
+                  #{String(t.id)}
                 </TableCell>
 	                <TableCell className="whitespace-nowrap text-xs text-zinc-200">
 	                  {t.pnlAmount}
