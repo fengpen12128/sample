@@ -3,14 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { generateSnowflakeId } from "@/lib/snowflake-id";
 import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
-function requiredInt(formData: FormData, key: string) {
+function requiredId(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
-  if (!raw) return null;
-  const n = Number(raw);
-  if (!Number.isInteger(n)) return null;
-  return n;
+  return raw || null;
 }
 
 function requiredString(formData: FormData, key: string) {
@@ -181,7 +179,10 @@ export async function createTrade(formData: FormData) {
   }
 
   await prisma.trade.create({
-    data: parsed.data,
+    data: {
+      id: await generateSnowflakeId(),
+      ...parsed.data,
+    },
   });
 
   revalidatePath("/");
@@ -190,7 +191,7 @@ export async function createTrade(formData: FormData) {
 }
 
 export async function updateTrade(formData: FormData) {
-  const id = requiredInt(formData, "id");
+  const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -211,7 +212,7 @@ export async function updateTrade(formData: FormData) {
 }
 
 export async function updateTradeReview(formData: FormData) {
-  const id = requiredInt(formData, "id");
+  const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -230,7 +231,7 @@ export async function updateTradeReview(formData: FormData) {
 }
 
 export async function updateTradeScreenshot(formData: FormData) {
-  const id = requiredInt(formData, "id");
+  const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
   }
@@ -251,7 +252,7 @@ export async function updateTradeScreenshot(formData: FormData) {
 }
 
 export async function deleteTrade(formData: FormData) {
-  const id = requiredInt(formData, "id");
+  const id = requiredId(formData, "id");
   if (id === null) {
     return;
   }

@@ -1,5 +1,5 @@
 export type TradeRiskInput = {
-  id: number;
+  id: string;
   entryTime: Date | string;
   direction: string;
   entryPoint: number;
@@ -12,7 +12,7 @@ export type TradeRiskInput = {
 import { formatWallClockYmd } from "@/lib/wall-clock-datetime";
 
 export type RiskSeriesPoint = {
-  id: number;
+  id: string;
   date: Date;
   label: string;
   r: number;
@@ -42,7 +42,7 @@ export function normalizeRiskSeries(
     const bTime = new Date(b.entryTime).getTime();
     const timeDiff = aTime - bTime;
     if (timeDiff !== 0) return sortOrder === "desc" ? -timeDiff : timeDiff;
-    const idDiff = a.id - b.id;
+    const idDiff = a.id.localeCompare(b.id);
     return sortOrder === "desc" ? -idDiff : idDiff;
   });
 

@@ -31,7 +31,7 @@ import { updateTradeScreenshot } from "@/app/action";
 import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
 type StreamTrade = {
-  id: number;
+  id: string;
   timeframe: string | null;
   trendAssessment: string | null;
   marketPhase: string | null;
@@ -215,7 +215,7 @@ function ScreenshotUploadPlaceholder({
   tradeId,
   onUploaded,
 }: {
-  tradeId: number;
+  tradeId: string;
   onUploaded: (url: string) => void;
 }) {
   const [uploading, setUploading] = React.useState(false);
@@ -443,7 +443,7 @@ export default function StreamPage() {
       }
       const data = (await response.json()) as StreamResponse;
       setItems((prev) => {
-        const merged = new Map<number, StreamTrade>();
+        const merged = new Map<string, StreamTrade>();
         prev.forEach((item) => merged.set(item.id, item));
         data.items.forEach((item) => merged.set(item.id, item));
         return Array.from(merged.values());
@@ -460,7 +460,7 @@ export default function StreamPage() {
   }, []);
 
   const handleReviewSaved = React.useCallback(
-    ({ id, entryReason }: { id: number; entryReason: string | null }) => {
+    ({ id, entryReason }: { id: string; entryReason: string | null }) => {
       setItems((prev) => prev.map((t) => (t.id === id ? { ...t, entryReason } : t)));
     },
     [],

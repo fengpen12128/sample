@@ -79,7 +79,7 @@ const tradeFormSchema = z.object({
 type TradeFormValues = z.infer<typeof tradeFormSchema>;
 
 export type TradeEditable = {
-  id: number;
+  id: string;
   timeframe: string | null;
   trendAssessment: string | null;
   marketPhase: string | null;

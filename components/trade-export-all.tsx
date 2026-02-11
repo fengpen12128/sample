@@ -72,7 +72,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
   );
 }
 
-async function downloadImage(url: string, id: number, symbol: string) {
+async function downloadImage(url: string, id: string, symbol: string) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed: ${response.status}`);

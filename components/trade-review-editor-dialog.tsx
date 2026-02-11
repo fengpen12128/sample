@@ -25,11 +25,11 @@ export function TradeReviewEditorDialog({
   trigger,
   onSaved,
 }: {
-  tradeId: number;
+  tradeId: string;
   screenshotUrl: string | null;
   initialReview: string | null;
   trigger: React.ReactNode;
-  onSaved?: (payload: { id: number; entryReason: string | null }) => void;
+  onSaved?: (payload: { id: string; entryReason: string | null }) => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(initialReview ?? "");

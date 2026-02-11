@@ -83,7 +83,7 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
       const aTime = new Date(a.entryTime).getTime();
       const bTime = new Date(b.entryTime).getTime();
       if (aTime !== bTime) return bTime - aTime;
-      return b.id - a.id;
+      return b.id.localeCompare(a.id);
     });
     const windowed =
       windowSize && windowSize > 0 ? sorted.slice(0, windowSize) : sorted;

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { ModeToggle } from "@/components/mode-toggle";
 import { TradeExportAllButton } from "@/components/trade-export-all";
+import { TradeMigrateIdsButton } from "@/components/trade-migrate-ids-button";
 import { TradeCreateDialog } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,7 @@ export default async function Home({ searchParams }: PageProps) {
           <ModeToggle />
           <TradeCreateDialog />
           <TradeExportAllButton trades={exportTrades} />
+          <TradeMigrateIdsButton />
           <Button
             asChild
             size="sm"
