@@ -211,16 +211,29 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                 margin={{ top: 12, right: 16, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="x" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="x" tick={false} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
-                  labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value) => {
-                    if (typeof value !== "number") {
-                      return ["N/A", "Rolling avg"];
-                    }
-                    return [`${value.toFixed(2)}R`, "Rolling avg"];
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const entry = payload[0];
+                    const rawValue = entry.value;
+                    const valueText =
+                      typeof rawValue === "number" ? `${rawValue.toFixed(2)}R` : "N/A";
+                    const id = String((entry.payload as { id?: string }).id ?? "");
+                    return (
+                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                        <div className="font-medium">Rolling avg: {valueText}</div>
+                        {id ? (
+                          <a
+                            href={`/?id=${encodeURIComponent(id)}`}
+                            className="text-emerald-300 underline"
+                          >
+                            ID: {id}
+                          </a>
+                        ) : null}
+                      </div>
+                    );
                   }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#34d399" strokeWidth={2} dot={false} />
@@ -242,16 +255,28 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
             <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <LineChart data={winLossRatio} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="x" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="x" tick={false} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
-                  labelStyle={{ color: "#e4e4e7" }}
-                  formatter={(value) => {
-                    if (typeof value !== "number") {
-                      return ["N/A", "Win/Loss ratio"];
-                    }
-                    return [value.toFixed(2), "Win/Loss ratio"];
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const entry = payload[0];
+                    const rawValue = entry.value;
+                    const valueText = typeof rawValue === "number" ? rawValue.toFixed(2) : "N/A";
+                    const id = String((entry.payload as { id?: string }).id ?? "");
+                    return (
+                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                        <div className="font-medium">Win/Loss ratio: {valueText}</div>
+                        {id ? (
+                          <a
+                            href={`/?id=${encodeURIComponent(id)}`}
+                            className="text-emerald-300 underline"
+                          >
+                            ID: {id}
+                          </a>
+                        ) : null}
+                      </div>
+                    );
                   }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#f472b6" strokeWidth={2} dot={false} />

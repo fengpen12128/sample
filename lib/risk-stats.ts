@@ -173,32 +173,32 @@ export function calculateDistributionComparison(
 export function calculateRollingAverageR(
   series: RiskSeriesPoint[],
   windowSize: number | null,
-): Array<{ x: string; value: number | null }> {
+): Array<{ x: string; id: string; value: number | null }> {
   return series.map((point, index) => {
     const windowStart = getWindowStart(index, windowSize);
     const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
-    if (!windowValues.length) return { x: point.label, value: null };
+    if (!windowValues.length) return { x: point.label, id: point.id, value: null };
     const sum = windowValues.reduce((acc, value) => acc + value, 0);
-    return { x: point.label, value: sum / windowValues.length };
+    return { x: point.label, id: point.id, value: sum / windowValues.length };
   });
 }
 
 export function calculateRollingWinLossRatio(
   series: RiskSeriesPoint[],
   windowSize: number | null,
-): Array<{ x: string; value: number | null }> {
+): Array<{ x: string; id: string; value: number | null }> {
   return series.map((point, index) => {
     const windowStart = getWindowStart(index, windowSize);
     const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
     const wins = windowValues.filter((value) => value > 0);
     const losses = windowValues.filter((value) => value < 0);
     if (!wins.length || !losses.length) {
-      return { x: point.label, value: null };
+      return { x: point.label, id: point.id, value: null };
     }
     const avgWin = wins.reduce((acc, value) => acc + value, 0) / wins.length;
     const avgLoss = losses.reduce((acc, value) => acc + value, 0) / losses.length;
-    if (avgLoss === 0) return { x: point.label, value: null };
-    return { x: point.label, value: avgWin / Math.abs(avgLoss) };
+    if (avgLoss === 0) return { x: point.label, id: point.id, value: null };
+    return { x: point.label, id: point.id, value: avgWin / Math.abs(avgLoss) };
   });
 }
 

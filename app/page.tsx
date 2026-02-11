@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/table";
 import { ModeToggle } from "@/components/mode-toggle";
 import { TradeExportAllButton } from "@/components/trade-export-all";
-import { TradeMigrateIdsButton } from "@/components/trade-migrate-ids-button";
 import { TradeCreateDialog } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,16 @@ function getSingleParam(value: string | string[] | undefined) {
   return "";
 }
 
+function parseBigIntParam(value: string) {
+  if (!value) return null;
+  if (!/^\d+$/.test(value)) return null;
+  try {
+    return BigInt(value);
+  } catch {
+    return null;
+  }
+}
+
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -56,12 +65,14 @@ export default async function Home({ searchParams }: PageProps) {
   const resultFilter = getSingleParam(resolvedSearchParams?.result);
   const tradePlatformFilter = getSingleParam(resolvedSearchParams?.tradePlatform);
   const liveModeFilter = getSingleParam(resolvedSearchParams?.tradeMode);
+  const idFilter = getSingleParam(resolvedSearchParams?.id);
+  const idFilterValue = parseBigIntParam(idFilter);
 
   const whereFilters = [
     resultFilter
       ? {
           result: {
-            contains: resultFilter,
+            equals: resultFilter,
             mode: "insensitive" as const,
           },
         }
@@ -69,7 +80,7 @@ export default async function Home({ searchParams }: PageProps) {
     tradePlatformFilter
       ? {
           tradePlatform: {
-            contains: tradePlatformFilter,
+            equals: tradePlatformFilter,
             mode: "insensitive" as const,
           },
         }
@@ -77,9 +88,14 @@ export default async function Home({ searchParams }: PageProps) {
     liveModeFilter
       ? {
           tradeMode: {
-            contains: liveModeFilter,
+            equals: liveModeFilter,
             mode: "insensitive" as const,
           },
+        }
+      : null,
+    idFilterValue !== null
+      ? {
+          id: idFilterValue,
         }
       : null,
   ].filter(Boolean) as Prisma.TradeWhereInput[];
@@ -124,7 +140,6 @@ export default async function Home({ searchParams }: PageProps) {
           <ModeToggle />
           <TradeCreateDialog />
           <TradeExportAllButton trades={exportTrades} />
-          <TradeMigrateIdsButton />
           <Button
             asChild
             size="sm"
@@ -141,31 +156,49 @@ export default async function Home({ searchParams }: PageProps) {
         </div>
         <div className="mb-4 rounded-lg border border-zinc-900 bg-zinc-950/30 px-4 py-3">
           <form className="space-y-3" method="get">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Result</Label>
-                <Input
+                <select
                   name="result"
-                  defaultValue={resultFilter}
-                  placeholder="e.g. Win"
-                  className="h-8 text-xs"
-                />
+                  defaultValue={resultFilter || "all"}
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="all">All</option>
+                  <option value="win">Win</option>
+                  <option value="loss">Loss</option>
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Trade platform</Label>
-                <Input
+                <select
                   name="tradePlatform"
-                  defaultValue={tradePlatformFilter}
-                  placeholder="e.g. MT5"
-                  className="h-8 text-xs"
-                />
+                  defaultValue={tradePlatformFilter || "all"}
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="all">All</option>
+                  <option value="Bybit">Bybit</option>
+                  <option value="Pepperstone">Pepperstone</option>
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Live mode</Label>
-                <Input
+                <select
                   name="tradeMode"
-                  defaultValue={liveModeFilter}
-                  placeholder="e.g. Live"
+                  defaultValue={liveModeFilter || "all"}
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="all">All</option>
+                  <option value="live">Live</option>
+                  <option value="demo">Demo</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">ID</Label>
+                <Input
+                  name="id"
+                  defaultValue={idFilter}
+                  placeholder="e.g. 10000"
                   className="h-8 text-xs"
                 />
               </div>
