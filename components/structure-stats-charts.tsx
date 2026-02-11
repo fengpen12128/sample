@@ -51,7 +51,7 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
   const fallbackRiskPoints = parseNumberWithFallback(fallbackRiskInput, 20);
 
   const series = React.useMemo(
-    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "desc"),
+    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "asc"),
     [trades, fallbackRiskPoints],
   );
 
@@ -82,11 +82,11 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
     const sorted = [...trades].sort((a, b) => {
       const aTime = new Date(a.entryTime).getTime();
       const bTime = new Date(b.entryTime).getTime();
-      if (aTime !== bTime) return bTime - aTime;
-      return b.id.localeCompare(a.id);
+      if (aTime !== bTime) return aTime - bTime;
+      return a.id.localeCompare(b.id);
     });
     const windowed =
-      windowSize && windowSize > 0 ? sorted.slice(0, windowSize) : sorted;
+      windowSize && windowSize > 0 ? sorted.slice(-windowSize) : sorted;
     const totals = windowed.reduce(
       (acc, trade) => {
         const value = Number.isFinite(trade.pnlAmount) ? trade.pnlAmount : 0;

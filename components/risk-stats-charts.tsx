@@ -44,7 +44,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
   const fallbackRiskPoints = parseNumberWithFallback(fallbackRiskInput, 20);
 
   const series = React.useMemo(
-    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "desc"),
+    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "asc"),
     [trades, fallbackRiskPoints],
   );
   const recentRollingSeries = React.useMemo(() => series.slice(-rollingMaxWindow), [series]);
