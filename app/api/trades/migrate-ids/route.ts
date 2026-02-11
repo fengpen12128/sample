@@ -7,18 +7,7 @@ import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function isAuthorized(request: Request) {
-  const secret = process.env.MIGRATE_TRADE_IDS_SECRET;
-  if (!secret) return false;
-  const token = request.headers.get("x-migrate-secret");
-  return token === secret;
-}
-
-export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function POST() {
   await ensureTradeIdStorage();
 
   const existing = await prisma.trade.findMany({

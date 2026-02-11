@@ -20,9 +20,6 @@ export function TradeMigrateIdsButton() {
   const handleMigrate = async () => {
     if (running) return;
 
-    const secret = window.prompt("Input MIGRATE_TRADE_IDS_SECRET to continue:");
-    if (!secret) return;
-
     const confirmed = window.confirm(
       "This will rewrite all existing trade IDs. Continue?",
     );
@@ -33,9 +30,6 @@ export function TradeMigrateIdsButton() {
     try {
       const response = await fetch("/api/trades/migrate-ids", {
         method: "POST",
-        headers: {
-          "x-migrate-secret": secret,
-        },
       });
       const result = (await response.json()) as MigrateResponse;
 
