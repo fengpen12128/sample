@@ -25,10 +25,12 @@ export async function POST(request: Request) {
   existing.sort((a, b) => {
     const timeDiff = a.entryTime.getTime() - b.entryTime.getTime();
     if (timeDiff !== 0) return timeDiff;
-    const idDiff = BigInt(a.id) - BigInt(b.id);
-    if (idDiff < 0n) return -1;
-    if (idDiff > 0n) return 1;
-    return 0;
+    const aNum = Number(a.id);
+    const bNum = Number(b.id);
+    if (Number.isFinite(aNum) && Number.isFinite(bNum)) {
+      return aNum - bNum;
+    }
+    return a.id.localeCompare(b.id);
   });
 
   if (!existing.length) {
