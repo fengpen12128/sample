@@ -66,29 +66,37 @@ export default async function Home({ searchParams }: PageProps) {
   const tradePlatformFilter = getSingleParam(resolvedSearchParams?.tradePlatform);
   const liveModeFilter = getSingleParam(resolvedSearchParams?.tradeMode);
   const idFilter = getSingleParam(resolvedSearchParams?.id);
+  const normalizedResultFilter =
+    resultFilter && resultFilter.toLowerCase() !== "all" ? resultFilter : "";
+  const normalizedTradePlatformFilter =
+    tradePlatformFilter && tradePlatformFilter.toLowerCase() !== "all"
+      ? tradePlatformFilter
+      : "";
+  const normalizedLiveModeFilter =
+    liveModeFilter && liveModeFilter.toLowerCase() !== "all" ? liveModeFilter : "";
   const idFilterValue = parseBigIntParam(idFilter);
 
   const whereFilters = [
-    resultFilter
+    normalizedResultFilter
       ? {
           result: {
-            equals: resultFilter,
+            equals: normalizedResultFilter,
             mode: "insensitive" as const,
           },
         }
       : null,
-    tradePlatformFilter
+    normalizedTradePlatformFilter
       ? {
           tradePlatform: {
-            equals: tradePlatformFilter,
+            equals: normalizedTradePlatformFilter,
             mode: "insensitive" as const,
           },
         }
       : null,
-    liveModeFilter
+    normalizedLiveModeFilter
       ? {
           tradeMode: {
-            equals: liveModeFilter,
+            equals: normalizedLiveModeFilter,
             mode: "insensitive" as const,
           },
         }
@@ -162,11 +170,11 @@ export default async function Home({ searchParams }: PageProps) {
                 <select
                   name="result"
                   defaultValue={resultFilter || "all"}
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all">All</option>
-                  <option value="win">Win</option>
-                  <option value="loss">Loss</option>
+                  <option value="all" className="bg-zinc-900 text-zinc-100">All</option>
+                  <option value="win" className="bg-zinc-900 text-zinc-100">Win</option>
+                  <option value="loss" className="bg-zinc-900 text-zinc-100">Loss</option>
                 </select>
               </div>
               <div className="space-y-1.5">
@@ -174,11 +182,11 @@ export default async function Home({ searchParams }: PageProps) {
                 <select
                   name="tradePlatform"
                   defaultValue={tradePlatformFilter || "all"}
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all">All</option>
-                  <option value="Bybit">Bybit</option>
-                  <option value="Pepperstone">Pepperstone</option>
+                  <option value="all" className="bg-zinc-900 text-zinc-100">All</option>
+                  <option value="Bybit" className="bg-zinc-900 text-zinc-100">Bybit</option>
+                  <option value="Pepperstone" className="bg-zinc-900 text-zinc-100">Pepperstone</option>
                 </select>
               </div>
               <div className="space-y-1.5">
@@ -186,11 +194,11 @@ export default async function Home({ searchParams }: PageProps) {
                 <select
                   name="tradeMode"
                   defaultValue={liveModeFilter || "all"}
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all">All</option>
-                  <option value="live">Live</option>
-                  <option value="demo">Demo</option>
+                  <option value="all" className="bg-zinc-900 text-zinc-100">All</option>
+                  <option value="live" className="bg-zinc-900 text-zinc-100">Live</option>
+                  <option value="demo" className="bg-zinc-900 text-zinc-100">Demo</option>
                 </select>
               </div>
               <div className="space-y-1.5">

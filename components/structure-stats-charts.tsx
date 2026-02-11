@@ -9,6 +9,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -236,6 +237,20 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                     );
                   }}
                 />
+                <ReferenceLine
+                  y={0.2}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  ifOverflow="extendDomain"
+                  label={{ value: "Ideal min 0.20R", fill: "#f59e0b", fontSize: 11 }}
+                />
+                <ReferenceLine
+                  y={0.3}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  ifOverflow="extendDomain"
+                  label={{ value: "Ideal max 0.30R", fill: "#f59e0b", fontSize: 11 }}
+                />
                 <Line type="monotone" dataKey="value" stroke="#34d399" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -278,6 +293,20 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
                       </div>
                     );
                   }}
+                />
+                <ReferenceLine
+                  y={1.2}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  ifOverflow="extendDomain"
+                  label={{ value: "Ideal min 1.20", fill: "#f59e0b", fontSize: 11 }}
+                />
+                <ReferenceLine
+                  y={1.5}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  ifOverflow="extendDomain"
+                  label={{ value: "Ideal max 1.50", fill: "#f59e0b", fontSize: 11 }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#f472b6" strokeWidth={2} dot={false} />
               </LineChart>
