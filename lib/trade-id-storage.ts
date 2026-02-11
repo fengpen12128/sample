@@ -34,6 +34,9 @@ async function doEnsureTradeIdStorage() {
     `CREATE SEQUENCE IF NOT EXISTS "Trade_id_seq" AS BIGINT START WITH ${TRADE_ID_START} INCREMENT BY 1`,
   );
   await prisma.$executeRawUnsafe(
+    `ALTER SEQUENCE "Trade_id_seq" AS BIGINT NO MINVALUE NO MAXVALUE`,
+  );
+  await prisma.$executeRawUnsafe(
     `ALTER TABLE "Trade" ALTER COLUMN "id" SET DEFAULT nextval('"Trade_id_seq"')`,
   );
   await prisma.$executeRawUnsafe(
