@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { prisma } from "@/lib/prisma";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import type { Prisma } from "@prisma/client";
 import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
@@ -41,6 +42,8 @@ type PageProps = {
 };
 
 export default async function Home({ searchParams }: PageProps) {
+  await ensureTradeIdStorage();
+
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const errorParam = resolvedSearchParams?.error;
   const error =

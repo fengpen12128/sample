@@ -5,8 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RiskStatsCharts } from "@/components/risk-stats-charts";
 import { prisma } from "@/lib/prisma";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 
 export default async function StatsPage() {
+  await ensureTradeIdStorage();
+
   const trades = await prisma.trade.findMany({
     orderBy: [{ entryTime: "asc" }, { id: "asc" }],
     select: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { generateSnowflakeId, isValidSnowflakeId } from "@/lib/snowflake-id";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
+
+  await ensureTradeIdStorage();
 
   const existing = await prisma.trade.findMany({
     select: { id: true, entryTime: true },

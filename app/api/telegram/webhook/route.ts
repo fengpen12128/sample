@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { generateSnowflakeId } from "@/lib/snowflake-id";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { parseTradeImageFromBuffer } from "@/lib/trade-image-parse";
 import { downloadTelegramFile, getTelegramFile, sendTelegramMessage } from "@/lib/telegram";
 
@@ -84,6 +85,8 @@ function pickLargestPhoto(photos: TelegramPhotoSize[]) {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
+  await ensureTradeIdStorage();
+
   logger.info({ url: request.url, method: request.method }, "Telegram webhook hit");
 
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,8 @@ function parseNumber(value: string | null, fallback: number) {
 }
 
 export async function GET(request: Request) {
+  await ensureTradeIdStorage();
+
   const { searchParams } = new URL(request.url);
   const offsetRaw = parseNumber(searchParams.get("offset"), 0);
   const limitRaw = parseNumber(searchParams.get("limit"), 10);

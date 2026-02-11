@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { generateSnowflakeId } from "@/lib/snowflake-id";
+import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
 
 function requiredId(formData: FormData, key: string) {
@@ -173,6 +174,8 @@ function parseTradeInput(formData: FormData) {
 }
 
 export async function createTrade(formData: FormData) {
+  await ensureTradeIdStorage();
+
   const parsed = parseTradeInput(formData);
   if (!parsed.ok) {
     return { ok: false as const, error: parsed.error };
@@ -191,6 +194,8 @@ export async function createTrade(formData: FormData) {
 }
 
 export async function updateTrade(formData: FormData) {
+  await ensureTradeIdStorage();
+
   const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
@@ -212,6 +217,8 @@ export async function updateTrade(formData: FormData) {
 }
 
 export async function updateTradeReview(formData: FormData) {
+  await ensureTradeIdStorage();
+
   const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
@@ -231,6 +238,8 @@ export async function updateTradeReview(formData: FormData) {
 }
 
 export async function updateTradeScreenshot(formData: FormData) {
+  await ensureTradeIdStorage();
+
   const id = requiredId(formData, "id");
   if (id === null) {
     return { ok: false as const, error: "Invalid id" };
@@ -252,6 +261,8 @@ export async function updateTradeScreenshot(formData: FormData) {
 }
 
 export async function deleteTrade(formData: FormData) {
+  await ensureTradeIdStorage();
+
   const id = requiredId(formData, "id");
   if (id === null) {
     return;
