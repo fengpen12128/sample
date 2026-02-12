@@ -270,10 +270,11 @@ export async function deleteTrade(formData: FormData) {
 
   const id = parseTradeId(requiredId(formData, "id"));
   if (id === null) {
-    return;
+    return { ok: false as const, error: "Invalid id" };
   }
 
   await prisma.trade.delete({ where: { id } });
   revalidatePath("/");
   revalidatePath("/stream");
+  return { ok: true as const };
 }

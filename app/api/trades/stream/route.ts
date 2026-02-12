@@ -12,6 +12,17 @@ function parseNumber(value: string | null, fallback: number) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function parseBigIntParam(value: string | null) {
+  if (!value) return null;
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) return null;
+  try {
+    return BigInt(normalized);
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   await ensureTradeIdStorage();
 
@@ -22,8 +33,12 @@ export async function GET(request: Request) {
   const directionRaw = searchParams.get("direction")?.trim();
   const tradeModeRaw = searchParams.get("tradeMode")?.trim();
   const tradePlatformRaw = searchParams.get("tradePlatform")?.trim();
+  const idFilterRaw = searchParams.get("id");
+  const fetchAllRaw = searchParams.get("fetchAll");
   const offset = Math.max(0, Math.trunc(offsetRaw));
   const limit = Math.min(50, Math.max(1, Math.trunc(limitRaw)));
+  const fetchAll = fetchAllRaw === "1" || fetchAllRaw === "true";
+  const idFilter = parseBigIntParam(idFilterRaw);
   const resultFilter = resultRaw && resultRaw.toLowerCase() !== "all" ? resultRaw : null;
   const directionFilter =
     directionRaw && directionRaw.toLowerCase() !== "all" ? directionRaw : null;
@@ -41,16 +56,29 @@ export async function GET(request: Request) {
   if (tradePlatformFilter) {
     where.tradePlatform = { equals: tradePlatformFilter, mode: "insensitive" };
   }
+  if (idFilter !== null) {
+    where.id = idFilter;
+  }
 
-  const [items, total] = await Promise.all([
-    prisma.trade.findMany({
-      where: Object.keys(where).length ? where : undefined,
-      orderBy: [{ entryTime: "desc" }, { id: "desc" }],
-      skip: offset,
-      take: limit,
-    }),
-    prisma.trade.count({ where: Object.keys(where).length ? where : undefined }),
-  ]);
+  const whereInput = Object.keys(where).length ? where : undefined;
+
+  const [items, total] = fetchAll
+    ? await Promise.all([
+        prisma.trade.findMany({
+          where: whereInput,
+          orderBy: [{ entryTime: "desc" }, { id: "desc" }],
+        }),
+        prisma.trade.count({ where: whereInput }),
+      ])
+    : await Promise.all([
+        prisma.trade.findMany({
+          where: whereInput,
+          orderBy: [{ entryTime: "desc" }, { id: "desc" }],
+          skip: offset,
+          take: limit,
+        }),
+        prisma.trade.count({ where: whereInput }),
+      ]);
 
   const payload = {
     items: items.map((t) => ({
@@ -82,7 +110,7 @@ export async function GET(request: Request) {
       screenshotUrl: t.screenshotUrl,
     })),
     total,
-    hasMore: offset + items.length < total,
+    hasMore: fetchAll ? false : offset + items.length < total,
   };
 
   return NextResponse.json(payload);

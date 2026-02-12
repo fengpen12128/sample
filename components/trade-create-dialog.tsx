@@ -1146,7 +1146,7 @@ function TradeFormDialog({
   );
 }
 
-export function TradeCreateDialog() {
+export function TradeCreateDialog({ onSaved }: { onSaved?: () => void } = {}) {
   return (
     <TradeFormDialog
       trigger={
@@ -1157,6 +1157,7 @@ export function TradeCreateDialog() {
       title="Add a trade"
       submitLabel="Save"
       mode="create"
+      onSaved={onSaved}
     />
   );
 }

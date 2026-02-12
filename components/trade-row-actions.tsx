@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { CheckIcon, CopyIcon } from "lucide-react";
 import Markdown from "markdown-to-jsx";
+import { toast } from "sonner";
 
 import { deleteTrade } from "@/app/action";
 import { TradeEditDialog, type TradeEditable } from "@/components/trade-create-dialog";
@@ -25,8 +26,13 @@ import {
 import { buildExportFileName, buildTradeMarkdown } from "@/lib/trade-export";
 import { buildTradingViewChartUrl } from "@/lib/tradingview";
 
-export function TradeRowActions({ trade }: { trade: TradeEditable }) {
-  const deleteFormRef = React.useRef<HTMLFormElement>(null);
+export function TradeRowActions({
+  trade,
+  onSaved,
+}: {
+  trade: TradeEditable;
+  onSaved?: () => void;
+}) {
   const copyTimerRef = React.useRef<number | null>(null);
   const [copied, setCopied] = React.useState(false);
 
@@ -59,6 +65,22 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
     [trade.exitTime, trade.symbol, trade.timeframe],
   );
 
+  const handleDelete = async () => {
+    const formData = new FormData();
+    formData.append("id", String(trade.id));
+    try {
+      const result = await deleteTrade(formData);
+      if (!result?.ok) {
+        toast.error(result?.error ?? "Delete failed.");
+        return;
+      }
+      toast.success("Trade deleted.");
+      onSaved?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Delete failed.");
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -70,6 +92,7 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
       <DropdownMenuContent align="end">
         <TradeEditDialog
           trade={trade}
+          onSaved={onSaved}
           trigger={
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               Edit
@@ -234,18 +257,12 @@ export function TradeRowActions({ trade }: { trade: TradeEditable }) {
         <DropdownMenuItem
           className="text-red-400 focus:text-red-300"
           onSelect={(e) => {
-            // Radix menu items can prevent default click behavior; submit explicitly.
             e.preventDefault();
-            deleteFormRef.current?.requestSubmit();
+            void handleDelete();
           }}
         >
           Delete
         </DropdownMenuItem>
-
-        {/* Hidden form for server action submission */}
-        <form ref={deleteFormRef} action={deleteTrade} className="hidden">
-          <input type="hidden" name="id" value={String(trade.id)} />
-        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );
