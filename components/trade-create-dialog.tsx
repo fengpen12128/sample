@@ -11,6 +11,11 @@ import { z } from "zod";
 
 import { createTrade, updateTrade } from "@/app/action";
 import { Button } from "@/components/ui/button";
+import {
+  joinScreenshotUrls,
+  mergeScreenshotUrls,
+  splitScreenshotUrls,
+} from "@/lib/screenshot-urls";
 import { formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
 import {
   Dialog,
@@ -185,6 +190,10 @@ function TradeFormDialog({
   const slPoint = watch("slPoint");
   const tpPoint = watch("tpPoint");
   const screenshot = watch("screenshotUrl");
+  const screenshotUrls = React.useMemo(
+    () => splitScreenshotUrls(screenshot),
+    [screenshot],
+  );
 
   // Reset form when dialog opens
   React.useEffect(() => {
@@ -207,19 +216,28 @@ function TradeFormDialog({
     };
   }, [aiFile]);
 
-  const handleScreenshotUpload = async (file: File) => {
+  const handleScreenshotUpload = async (files: File[]) => {
+    if (!files.length) return;
     setUploadingScreenshot(true);
     setScreenshotError(null);
     try {
-      const response = await fetch(`/api/screenshot/upload?filename=${file.name}`, {
-        method: "POST",
-        body: file,
-      });
-      if (!response.ok) {
-        throw new Error("Upload failed, please try again");
+      const uploadedUrls: string[] = [];
+      for (const file of files) {
+        const response = await fetch(`/api/screenshot/upload?filename=${file.name}`, {
+          method: "POST",
+          body: file,
+        });
+        if (!response.ok) {
+          throw new Error("Upload failed, please try again");
+        }
+        const blob = (await response.json()) as PutBlobResult;
+        uploadedUrls.push(blob.url);
       }
-      const blob = (await response.json()) as PutBlobResult;
-      setValue("screenshotUrl", blob.url);
+      const merged = mergeScreenshotUrls(screenshot, uploadedUrls);
+      setValue("screenshotUrl", merged, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     } catch (error) {
       setScreenshotError(error instanceof Error ? error.message : "Upload failed");
     } finally {
@@ -990,14 +1008,15 @@ function TradeFormDialog({
 	                      id={screenshotInputId}
                         ref={screenshotInputRef}
 	                      type="file"
+                        multiple
 	                      accept="image/*"
 	                      className="sr-only"
 	                      onChange={(e) => {
-	                        const file = e.target.files?.[0];
-	                        if (!file) return;
+	                        const files = Array.from(e.target.files ?? []);
+	                        if (!files.length) return;
                           // Allow selecting the same file again after upload.
                           e.target.value = "";
-	                        void handleScreenshotUpload(file);
+	                        void handleScreenshotUpload(files);
 	                      }}
 	                    />
 	                    <label
@@ -1007,29 +1026,59 @@ function TradeFormDialog({
 	                      <span className="text-sm font-medium text-zinc-200">
 	                        {uploadingScreenshot
                             ? "Uploading..."
-                            : screenshot
-                              ? "Click to replace image"
-                              : "Click to upload image"}
+                            : screenshotUrls.length
+                              ? "Click to add more images"
+                              : "Click to upload images"}
 	                      </span>
-	                      <span>PNG, JPG, GIF — upload to Vercel Blob</span>
+	                      <span>PNG, JPG, GIF — multiple upload supported</span>
 	                    </label>
 	                    <FieldDescription>
-	                      {screenshot
-	                        ? "Image uploaded successfully."
-	                        : "Preview appears after selecting an image."}
+	                      {screenshotUrls.length
+	                        ? `${screenshotUrls.length} image(s) uploaded successfully.`
+	                        : "Preview appears after selecting images."}
 	                    </FieldDescription>
                     {screenshotError ? (
                       <FieldError>{screenshotError}</FieldError>
                     ) : null}
-	                    {screenshot ? (
+	                    {screenshotUrls.length ? (
 	                      <div className="mt-2 space-y-2">
-	                        {/* eslint-disable-next-line @next/next/no-img-element */}
-	                        <img
-	                          src={screenshot}
-	                          alt="preview"
-	                          className="h-28 w-full rounded border border-zinc-800 object-cover"
-	                        />
-	                        <div className="flex items-center justify-end">
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                            {screenshotUrls.map((url, index) => (
+                              <div
+                                key={`${url}-${index}`}
+                                className="overflow-hidden rounded border border-zinc-800 bg-zinc-900/40"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={url}
+                                  alt={`preview-${index + 1}`}
+                                  className="h-24 w-full object-cover"
+                                />
+                                <div className="p-1">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 w-full text-xs"
+                                    onClick={() => {
+                                      const remaining = screenshotUrls.filter((_, i) => i !== index);
+                                      setValue(
+                                        "screenshotUrl",
+                                        joinScreenshotUrls(remaining),
+                                        {
+                                          shouldDirty: true,
+                                          shouldValidate: true,
+                                        },
+                                      );
+                                    }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+	                        <div className="flex items-center justify-end gap-2">
 	                          <Button
 	                            type="button"
 	                            size="sm"
@@ -1045,7 +1094,7 @@ function TradeFormDialog({
 	                              }
 	                            }}
 	                          >
-	                            Remove image
+	                            Remove all images
 	                          </Button>
 	                        </div>
 	                      </div>

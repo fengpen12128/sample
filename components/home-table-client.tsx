@@ -59,6 +59,7 @@ type SearchFilters = {
   tradePlatform: string;
   tradeMode: string;
   id: string;
+  entryDate: string;
 };
 
 const DEFAULT_FILTERS: SearchFilters = {
@@ -66,6 +67,7 @@ const DEFAULT_FILTERS: SearchFilters = {
   tradePlatform: "all",
   tradeMode: "all",
   id: "",
+  entryDate: "",
 };
 
 function formatDateTime(value: string | null) {
@@ -127,6 +129,10 @@ function buildQueryString(filters: SearchFilters) {
   const normalizedId = filters.id.trim();
   if (normalizedId) {
     params.set("id", normalizedId);
+  }
+  const normalizedEntryDate = filters.entryDate.trim();
+  if (normalizedEntryDate) {
+    params.set("entryDate", normalizedEntryDate);
   }
 
   return params.toString();
@@ -191,6 +197,7 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
     const nextFilters = {
       ...filters,
       id: filters.id.trim(),
+      entryDate: filters.entryDate.trim(),
     };
     setFilters(nextFilters);
     setAppliedFilters(nextFilters);
@@ -232,7 +239,7 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
         </div>
         <div className="mb-4 rounded-lg border border-zinc-900 bg-zinc-950/30 px-4 py-3">
           <form className="space-y-3" onSubmit={handleSubmit}>
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-5">
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Result</Label>
                 <select
@@ -305,6 +312,18 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
                     setFilters((prev) => ({ ...prev, id: event.target.value }))
                   }
                   placeholder="e.g. 10000"
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Entry date</Label>
+                <Input
+                  name="entryDate"
+                  type="date"
+                  value={filters.entryDate}
+                  onChange={(event) =>
+                    setFilters((prev) => ({ ...prev, entryDate: event.target.value }))
+                  }
                   className="h-8 text-xs"
                 />
               </div>

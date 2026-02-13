@@ -23,6 +23,31 @@ function parseBigIntParam(value: string | null) {
   }
 }
 
+function parseDateOnlyParam(value: string | null) {
+  if (!value) return null;
+  const normalized = value.trim();
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return null;
+  }
+  const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+  if (Number.isNaN(start.getTime())) return null;
+  if (
+    start.getUTCFullYear() !== year ||
+    start.getUTCMonth() !== month - 1 ||
+    start.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  const end = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0));
+  if (Number.isNaN(end.getTime())) return null;
+  return { start, end };
+}
+
 export async function GET(request: Request) {
   await ensureTradeIdStorage();
 
@@ -34,6 +59,7 @@ export async function GET(request: Request) {
   const tradeModeRaw = searchParams.get("tradeMode")?.trim();
   const tradePlatformRaw = searchParams.get("tradePlatform")?.trim();
   const idFilterRaw = searchParams.get("id");
+  const entryDateRaw = searchParams.get("entryDate");
   const fetchAllRaw = searchParams.get("fetchAll");
   const offset = Math.max(0, Math.trunc(offsetRaw));
   const limit = Math.min(50, Math.max(1, Math.trunc(limitRaw)));
@@ -48,6 +74,7 @@ export async function GET(request: Request) {
     tradePlatformRaw && tradePlatformRaw.toLowerCase() !== "all"
       ? tradePlatformRaw
       : null;
+  const entryDateFilter = parseDateOnlyParam(entryDateRaw);
 
   const where: Prisma.TradeWhereInput = {};
   if (resultFilter) where.result = { equals: resultFilter, mode: "insensitive" };
@@ -58,6 +85,12 @@ export async function GET(request: Request) {
   }
   if (idFilter !== null) {
     where.id = idFilter;
+  }
+  if (entryDateFilter) {
+    where.entryTime = {
+      gte: entryDateFilter.start,
+      lt: entryDateFilter.end,
+    };
   }
 
   const whereInput = Object.keys(where).length ? where : undefined;

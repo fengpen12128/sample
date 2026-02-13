@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 import { parseWallClockDateTime } from "@/lib/wall-clock-datetime";
+import { joinScreenshotUrls, splitScreenshotUrls } from "@/lib/screenshot-urls";
 
 function requiredId(formData: FormData, key: string) {
   const raw = String(formData.get(key) ?? "").trim();
@@ -119,7 +120,10 @@ function parseTradeInput(formData: FormData) {
   const expectedScenario = optionalString(formData, "expectedScenario");
   const confidenceLevel = optionalNumber(formData, "confidenceLevel");
 
-  const screenshotUrl = optionalString(formData, "screenshotUrl");
+  const screenshotUrlRaw = optionalString(formData, "screenshotUrl");
+  const screenshotUrl = screenshotUrlRaw
+    ? joinScreenshotUrls(splitScreenshotUrls(screenshotUrlRaw))
+    : null;
 
   const ok =
     symbol &&
@@ -250,7 +254,10 @@ export async function updateTradeScreenshot(formData: FormData) {
     return { ok: false as const, error: "Invalid id" };
   }
 
-  const screenshotUrl = requiredString(formData, "screenshotUrl");
+  const screenshotUrlRaw = requiredString(formData, "screenshotUrl");
+  const screenshotUrl = screenshotUrlRaw
+    ? joinScreenshotUrls(splitScreenshotUrls(screenshotUrlRaw))
+    : null;
   if (!screenshotUrl) {
     return { ok: false as const, error: "Invalid screenshot url" };
   }

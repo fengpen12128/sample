@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { LoaderIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, LoaderIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateTradeReview } from "@/app/action";
@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { splitScreenshotUrls } from "@/lib/screenshot-urls";
+
+function offsetIndex(current: number, total: number, offset: number) {
+  if (total <= 0) return 0;
+  const next = (current + offset) % total;
+  return next < 0 ? next + total : next;
+}
 
 export function TradeReviewEditorDialog({
   tradeId,
@@ -34,10 +41,26 @@ export function TradeReviewEditorDialog({
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(initialReview ?? "");
   const [submitting, setSubmitting] = React.useState(false);
+  const [imageIndex, setImageIndex] = React.useState(0);
+  const screenshotUrls = React.useMemo(
+    () => splitScreenshotUrls(screenshotUrl),
+    [screenshotUrl],
+  );
+  const hasManyImages = screenshotUrls.length > 1;
+  const currentScreenshot = screenshotUrls[imageIndex] ?? screenshotUrls[0] ?? null;
+  const screenshotKey = React.useMemo(
+    () => screenshotUrls.join(","),
+    [screenshotUrls],
+  );
 
   React.useEffect(() => {
     if (open) setValue(initialReview ?? "");
   }, [open, initialReview]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setImageIndex(0);
+  }, [open, screenshotKey]);
 
   const onSubmit = async () => {
     if (submitting) return;
@@ -81,16 +104,51 @@ export function TradeReviewEditorDialog({
         <LiquidGlass className="h-full w-full rounded-none">
           <div className="flex h-full w-full">
             <div className="relative flex h-full basis-4/5 items-center justify-center bg-black/20 p-4">
-              {screenshotUrl ? (
+              {currentScreenshot ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={screenshotUrl}
+                  src={currentScreenshot}
                   alt={`Trade ${tradeId} screenshot`}
                   className="h-full w-full rounded-md border border-white/10 bg-black/30 object-contain"
                 />
               ) : (
                 <div className="text-xs text-zinc-400">No screenshot</div>
               )}
+              {hasManyImages ? (
+                <>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="secondary"
+                    className="absolute left-6 top-1/2 -translate-y-1/2"
+                    onClick={() =>
+                      setImageIndex((prev) =>
+                        offsetIndex(prev, screenshotUrls.length, -1),
+                      )
+                    }
+                    aria-label="Previous screenshot"
+                  >
+                    <ChevronLeftIcon className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="secondary"
+                    className="absolute right-6 top-1/2 -translate-y-1/2"
+                    onClick={() =>
+                      setImageIndex((prev) =>
+                        offsetIndex(prev, screenshotUrls.length, 1),
+                      )
+                    }
+                    aria-label="Next screenshot"
+                  >
+                    <ChevronRightIcon className="size-4" />
+                  </Button>
+                  <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded bg-black/55 px-2 py-1 text-[11px] text-zinc-100">
+                    {imageIndex + 1} / {screenshotUrls.length}
+                  </div>
+                </>
+              ) : null}
             </div>
 
             <div className="flex h-full basis-1/5 flex-col gap-3 border-l border-zinc-800 bg-zinc-950/60 p-4">

@@ -1,5 +1,6 @@
 import type { TradeEditable } from "@/components/trade-create-dialog";
 import { formatWallClockYmd, formatWallClockYmdHms } from "@/lib/wall-clock-datetime";
+import { splitScreenshotUrls } from "@/lib/screenshot-urls";
 
 export type TradeExportable = Omit<TradeEditable, "entryTime" | "exitTime"> & {
   entryTime: Date | string;
@@ -8,17 +9,23 @@ export type TradeExportable = Omit<TradeEditable, "entryTime" | "exitTime"> & {
 
 export function buildTradeMarkdown(
   trade: TradeExportable,
-  options?: { imagePath?: string },
+  options?: { imagePath?: string; imagePaths?: string[] },
 ) {
   const entryTime = formatWallClockYmdHms(trade.entryTime);
   const exitTime = formatWallClockYmdHms(trade.exitTime);
-  const imagePath = options?.imagePath?.trim();
-  const screenshotLine = imagePath
-    ? `![Screenshot](${imagePath})`
-    : trade.screenshotUrl
-      ? `![Screenshot](${trade.screenshotUrl})`
-      : "";
-  const screenshotUrlLine = !imagePath && trade.screenshotUrl ? trade.screenshotUrl : "";
+  const imagePaths = (options?.imagePaths ?? [])
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const singleImagePath = options?.imagePath?.trim();
+  if (singleImagePath) {
+    imagePaths.unshift(singleImagePath);
+  }
+  const screenshotUrls = splitScreenshotUrls(trade.screenshotUrl);
+  const screenshotLines =
+    imagePaths.length > 0
+      ? imagePaths.map((path, index) => `![Screenshot ${index + 1}](${path})`)
+      : screenshotUrls.map((url, index) => `![Screenshot ${index + 1}](${url})`);
+  const screenshotUrlLines = imagePaths.length > 0 ? [] : screenshotUrls;
 
   return [
     "# Trade Record",
@@ -56,8 +63,8 @@ export function buildTradeMarkdown(
     trade.entryReason || "",
     "",
     "## Screenshot",
-    screenshotLine,
-    screenshotUrlLine,
+    ...screenshotLines,
+    ...screenshotUrlLines,
   ]
     .filter((line, index, arr) => {
       if (line) return true;

@@ -12,6 +12,7 @@ import {
   sanitizeFileSegment,
   type TradeExportable,
 } from "@/lib/trade-export";
+import { splitScreenshotUrls } from "@/lib/screenshot-urls";
 
 type TradeExportItem = TradeExportable;
 
@@ -33,23 +34,22 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
       }
 
       for (const trade of trades) {
-        let imagePath = "";
-        if (trade.screenshotUrl) {
+        const screenshotUrls = splitScreenshotUrls(trade.screenshotUrl);
+        const imagePaths: string[] = [];
+        for (let index = 0; index < screenshotUrls.length; index += 1) {
+          const url = screenshotUrls[index];
+          if (!url) continue;
           try {
-            const { blob, filename } = await downloadImage(
-              trade.screenshotUrl,
-              trade.id,
-              trade.symbol,
-            );
+            const { blob, filename } = await downloadImage(url, trade.id, trade.symbol, index + 1);
             imagesFolder.file(filename, blob);
-            imagePath = `images/${filename}`;
-          } catch (error) {
-            toast.error(`Screenshot download failed: #${trade.id}`);
+            imagePaths.push(`images/${filename}`);
+          } catch {
+            toast.error(`Screenshot download failed: #${trade.id} (${index + 1})`);
           }
         }
 
         const markdown = buildTradeMarkdown(trade, {
-          imagePath,
+          imagePaths,
         });
         zip.file(buildExportFileName(trade), markdown);
       }
@@ -72,7 +72,7 @@ export function TradeExportAllButton({ trades }: { trades: TradeExportItem[] }) 
   );
 }
 
-async function downloadImage(url: string, id: string, symbol: string) {
+async function downloadImage(url: string, id: string, symbol: string, index: number) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed: ${response.status}`);
@@ -82,7 +82,7 @@ async function downloadImage(url: string, id: string, symbol: string) {
   const extension =
     resolveImageExtension(url, response.headers.get("content-type")) ?? "bin";
   const safeSymbol = symbol ? sanitizeFileSegment(symbol) : "trade";
-  const filename = `trade-${id}-${safeSymbol}.${extension}`;
+  const filename = `trade-${id}-${safeSymbol}-${index}.${extension}`;
 
   return { blob, filename };
 }
