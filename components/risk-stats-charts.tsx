@@ -18,10 +18,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  calculateAbsoluteLossHistogram,
   calculateBottomLossAverage,
-  calculateLossHistogram,
   calculateRollingMaxLoss,
-  normalizeRiskSeries,
+  normalizeLossPnlSeries,
   type TradeRiskInput,
 } from "@/lib/risk-stats";
 
@@ -29,50 +29,44 @@ type RiskStatsChartsProps = {
   trades: TradeRiskInput[];
 };
 
-const DEFAULT_BUCKETS = "-0.5,-1,-1.5,-2,-3";
-
 export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
-  const [thresholdInput, setThresholdInput] = React.useState("-1.5");
-  const [bucketInput, setBucketInput] = React.useState(DEFAULT_BUCKETS);
-  const [fallbackRiskInput, setFallbackRiskInput] = React.useState("20");
+  const [thresholdInput, setThresholdInput] = React.useState("1.5");
 
   const rollingMaxWindow = 20;
   const bottomLossWindow = 30;
   const histogramWindow = 100;
-  const threshold = parseNumberWithFallback(thresholdInput, -1.5);
-  const bucketEdges = parseBucketEdges(bucketInput);
-  const fallbackRiskPoints = parseNumberWithFallback(fallbackRiskInput, 20);
-
-  const series = React.useMemo(
-    () => normalizeRiskSeries(trades, fallbackRiskPoints, "index", "asc"),
-    [trades, fallbackRiskPoints],
+  const threshold = parseNumberWithFallback(thresholdInput, 1.5);
+  const rollingLossSeries = React.useMemo(
+    () => normalizeLossPnlSeries(trades, "index", "asc"),
+    [trades],
   );
-  const recentRollingSeries = React.useMemo(() => series.slice(-rollingMaxWindow), [series]);
-  const recentBottomSeries = React.useMemo(() => series.slice(-bottomLossWindow), [series]);
-  const recentHistogramSeries = React.useMemo(() => series.slice(-histogramWindow), [series]);
+  const recentRollingSeries = React.useMemo(
+    () => rollingLossSeries.slice(-rollingMaxWindow),
+    [rollingLossSeries],
+  );
+  const recentBottomSeries = React.useMemo(
+    () => rollingLossSeries.slice(-bottomLossWindow),
+    [rollingLossSeries],
+  );
+  const recentHistogramSeries = React.useMemo(
+    () => rollingLossSeries.slice(-histogramWindow),
+    [rollingLossSeries],
+  );
 
   const rollingMaxLoss = React.useMemo(
-    () => calculateRollingMaxLoss(recentRollingSeries, rollingMaxWindow),
+    () => calculateRollingMaxLoss(recentRollingSeries, rollingMaxWindow, "absolute"),
     [recentRollingSeries],
-  );
-  const rollingMaxLossChart = React.useMemo(
-    () =>
-      rollingMaxLoss.map((point) => ({
-        ...point,
-        value: point.value === null ? null : Math.abs(point.value),
-      })),
-    [rollingMaxLoss],
   );
 
   const bottomLossAvg = React.useMemo(
-    () => calculateBottomLossAverage(recentBottomSeries, bottomLossWindow, 0.1),
+    () => calculateBottomLossAverage(recentBottomSeries, bottomLossWindow, 0.1, "absolute"),
     [recentBottomSeries],
   );
   const maxLossThreshold = Math.abs(threshold);
 
   const histogram = React.useMemo(
-    () => calculateLossHistogram(recentHistogramSeries, histogramWindow, bucketEdges),
-    [recentHistogramSeries, bucketEdges],
+    () => calculateAbsoluteLossHistogram(recentHistogramSeries, histogramWindow, 10, 10),
+    [recentHistogramSeries],
   );
 
   return (
@@ -114,32 +108,29 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Risk threshold (R)</Label>
+              <Label className="text-xs text-zinc-400">Loss threshold (|PnL|)</Label>
               <Input
                 value={thresholdInput}
                 onChange={(event) => setThresholdInput(event.target.value)}
-                placeholder="-1.5"
+                placeholder="1.5"
                 inputMode="decimal"
                 className="h-8 text-xs"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Loss buckets (R)</Label>
+              <Label className="text-xs text-zinc-400">Loss buckets (fixed)</Label>
               <Input
-                value={bucketInput}
-                onChange={(event) => setBucketInput(event.target.value)}
-                placeholder={DEFAULT_BUCKETS}
+                value="0-10, 10-20, ..., 90-100"
                 className="h-8 text-xs"
+                disabled
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Risk per trade (PnL)</Label>
+              <Label className="text-xs text-zinc-400">Histogram bins</Label>
               <Input
-                value={fallbackRiskInput}
-                onChange={(event) => setFallbackRiskInput(event.target.value)}
-                placeholder="20"
-                inputMode="numeric"
+                value="10 bins x 10"
                 className="h-8 text-xs"
+                disabled
               />
             </div>
           </div>
@@ -153,7 +144,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         <CardContent>
           <div className="w-full min-w-0">
             <ResponsiveContainer width="100%" height={280} minWidth={0}>
-              <LineChart data={rollingMaxLossChart} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
+              <LineChart data={rollingMaxLoss} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="x" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -164,7 +155,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                     if (value == null || typeof value !== "number") {
                       return ["N/A", "Max loss"];
                     }
-                    return [`-${value.toFixed(2)}R`, "Max loss"];
+                    return [value.toFixed(2), "Max loss (|PnL|)"];
                   }}
                 />
                 <ReferenceLine
@@ -172,7 +163,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                   stroke="#f97316"
                   strokeDasharray="6 6"
                   ifOverflow="extendDomain"
-                  label={{ value: `-${maxLossThreshold.toFixed(2)}R`, fill: "#f97316", fontSize: 12 }}
+                  label={{ value: maxLossThreshold.toFixed(2), fill: "#f97316", fontSize: 12 }}
                 />
                 <Line
                   type="monotone"
@@ -205,7 +196,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                     if (value == null || typeof value !== "number") {
                       return ["N/A", "Bottom 10% avg"];
                     }
-                    return [`${value.toFixed(2)}R`, "Bottom 10% avg"];
+                    return [value.toFixed(2), "Bottom 10% avg (|PnL|)"];
                   }}
                 />
                 <Line
@@ -235,6 +226,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
                 <Tooltip
                   contentStyle={{ backgroundColor: "#0b0b0d", borderColor: "#27272a" }}
                   labelStyle={{ color: "#e4e4e7" }}
+                  formatter={(value) => [value, "Loss count"]}
                 />
                 <Bar dataKey="count" fill="#22c55e" />
               </BarChart>
@@ -246,21 +238,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
   );
 }
 
-function parseNullableInt(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
 function parseNumberWithFallback(value: string, fallback: number): number {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function parseBucketEdges(value: string): number[] {
-  return value
-    .split(",")
-    .map((entry) => Number.parseFloat(entry.trim()))
-    .filter((entry) => Number.isFinite(entry) && entry < 0);
 }

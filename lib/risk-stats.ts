@@ -2,6 +2,7 @@ export type TradeRiskInput = {
   id: string;
   entryTime: Date | string;
   direction: string;
+  result?: string | null;
   entryPoint: number;
   closingPoint: number;
   slPoint: number | null;
@@ -16,6 +17,13 @@ export type RiskSeriesPoint = {
   date: Date;
   label: string;
   r: number;
+};
+
+type PnlSeriesPoint = {
+  id: string;
+  date: Date;
+  label: string;
+  pnl: number;
 };
 
 export type HistogramComparisonDatum = {
@@ -63,13 +71,49 @@ export function normalizeRiskSeries(
     .filter((value): value is RiskSeriesPoint => Boolean(value));
 }
 
+export function normalizeLossPnlSeries(
+  trades: TradeRiskInput[],
+  labelMode: "date" | "index" = "date",
+  sortOrder: "asc" | "desc" = "asc",
+): RiskSeriesPoint[] {
+  const sorted = [...trades].sort((a, b) => {
+    const aTime = new Date(a.entryTime).getTime();
+    const bTime = new Date(b.entryTime).getTime();
+    const timeDiff = aTime - bTime;
+    if (timeDiff !== 0) return sortOrder === "desc" ? -timeDiff : timeDiff;
+    const idDiff = a.id.localeCompare(b.id);
+    return sortOrder === "desc" ? -idDiff : idDiff;
+  });
+
+  return sorted
+    .filter((trade) => isLossResult(trade.result))
+    .map((trade, index) => {
+      if (!Number.isFinite(trade.pnlAmount)) return null;
+      const date = new Date(trade.entryTime);
+      const label = labelMode === "index" ? String(index + 1) : formatDateLabel(date);
+      return {
+        id: trade.id,
+        date,
+        label,
+        r: Math.abs(trade.pnlAmount),
+      };
+    })
+    .filter((value): value is RiskSeriesPoint => Boolean(value));
+}
+
 export function calculateRollingMaxLoss(
   series: RiskSeriesPoint[],
   windowSize: number | null,
+  mode: "loss-only" | "absolute" = "loss-only",
 ): Array<{ x: string; value: number | null }> {
   return series.map((point, index) => {
     const windowStart = getWindowStart(index, windowSize);
     const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
+    if (mode === "absolute") {
+      if (!windowValues.length) return { x: point.label, value: null };
+      return { x: point.label, value: Math.max(...windowValues.map((value) => Math.abs(value))) };
+    }
+
     const losses = windowValues.filter((value) => value < 0);
     if (!losses.length) {
       return { x: point.label, value: null };
@@ -82,10 +126,24 @@ export function calculateBottomLossAverage(
   series: RiskSeriesPoint[],
   windowSize: number | null,
   bottomPercent: number,
+  mode: "loss-only" | "absolute" = "loss-only",
 ): Array<{ x: string; value: number | null }> {
   return series.map((point, index) => {
     const windowStart = getWindowStart(index, windowSize);
     const windowValues = series.slice(windowStart, index + 1).map((entry) => entry.r);
+    if (mode === "absolute") {
+      if (!windowValues.length) {
+        return { x: point.label, value: null };
+      }
+      const sortedAbs = windowValues
+        .map((value) => Math.abs(value))
+        .sort((a, b) => b - a);
+      const sliceSize = Math.max(1, Math.ceil(sortedAbs.length * bottomPercent));
+      const sample = sortedAbs.slice(0, sliceSize);
+      const sum = sample.reduce((acc, value) => acc + value, 0);
+      return { x: point.label, value: sum / sample.length };
+    }
+
     const losses = windowValues.filter((value) => value < 0);
     if (!losses.length) {
       return { x: point.label, value: null };
@@ -133,6 +191,49 @@ export function calculateLossHistogram(
     }
     if (value <= buckets[buckets.length - 1].min) {
       counts[buckets.length - 1] += 1;
+    }
+  });
+
+  return buckets.map((bucket, index) => ({
+    bucket: bucket.label,
+    count: counts[index],
+  }));
+}
+
+export function calculateAbsoluteLossHistogram(
+  series: RiskSeriesPoint[],
+  windowSize: number | null,
+  binSize: number = 10,
+  binCount: number = 10,
+): RiskHistogramBucket[] {
+  if (!Number.isFinite(binSize) || binSize <= 0) return [];
+  if (!Number.isFinite(binCount) || binCount <= 0) return [];
+
+  const windowStart = getWindowStart(series.length - 1, windowSize);
+  const windowValues = series
+    .slice(windowStart)
+    .map((entry) => Math.abs(entry.r))
+    .filter((value) => Number.isFinite(value));
+
+  const buckets = Array.from({ length: binCount }, (_, index) => {
+    const min = index * binSize;
+    const max = (index + 1) * binSize;
+    return {
+      min,
+      max,
+      label: `${formatHistogramNumber(min)} to ${formatHistogramNumber(max)}`,
+    };
+  });
+  const counts = Array.from({ length: binCount }, () => 0);
+
+  windowValues.forEach((value) => {
+    if (value < 0) return;
+    if (value > binSize * binCount) return;
+    const bucketIndex = value === binSize * binCount
+      ? binCount - 1
+      : Math.floor(value / binSize);
+    if (bucketIndex >= 0 && bucketIndex < counts.length) {
+      counts[bucketIndex] += 1;
     }
   });
 
@@ -202,6 +303,101 @@ export function calculateRollingWinLossRatio(
   });
 }
 
+export function calculateRollingWinLossRatioByAbsolutePnl(
+  trades: TradeRiskInput[],
+  windowSize: number | null,
+  labelMode: "date" | "index" = "date",
+  sortOrder: "asc" | "desc" = "asc",
+): Array<{ x: string; id: string; value: number | null }> {
+  const sorted = [...trades].sort((a, b) => {
+    const aTime = new Date(a.entryTime).getTime();
+    const bTime = new Date(b.entryTime).getTime();
+    const timeDiff = aTime - bTime;
+    if (timeDiff !== 0) return sortOrder === "desc" ? -timeDiff : timeDiff;
+    const idDiff = a.id.localeCompare(b.id);
+    return sortOrder === "desc" ? -idDiff : idDiff;
+  });
+
+  const pnlSeries = sorted
+    .map((trade, index) => {
+      if (!Number.isFinite(trade.pnlAmount)) return null;
+      const date = new Date(trade.entryTime);
+      const label = labelMode === "index" ? String(index + 1) : formatDateLabel(date);
+      return {
+        id: trade.id,
+        date,
+        label,
+        pnl: trade.pnlAmount,
+      };
+    })
+    .filter((value): value is PnlSeriesPoint => Boolean(value));
+
+  return pnlSeries.map((point, index) => {
+    const windowStart = getWindowStart(index, windowSize);
+    const windowValues = pnlSeries.slice(windowStart, index + 1).map((entry) => entry.pnl);
+    const wins = windowValues.filter((value) => value > 0).map((value) => Math.abs(value));
+    const losses = windowValues.filter((value) => value < 0).map((value) => Math.abs(value));
+    if (!wins.length || !losses.length) {
+      return { x: point.label, id: point.id, value: null };
+    }
+    const avgWin = wins.reduce((acc, value) => acc + value, 0) / wins.length;
+    const avgLoss = losses.reduce((acc, value) => acc + value, 0) / losses.length;
+    if (avgLoss === 0) return { x: point.label, id: point.id, value: null };
+    return { x: point.label, id: point.id, value: avgWin / avgLoss };
+  });
+}
+
+export function calculateRollingExpectedValueByPnl(
+  trades: TradeRiskInput[],
+  windowSize: number | null,
+  labelMode: "date" | "index" = "date",
+  sortOrder: "asc" | "desc" = "asc",
+): Array<{ x: string; id: string; value: number | null }> {
+  const sorted = [...trades].sort((a, b) => {
+    const aTime = new Date(a.entryTime).getTime();
+    const bTime = new Date(b.entryTime).getTime();
+    const timeDiff = aTime - bTime;
+    if (timeDiff !== 0) return sortOrder === "desc" ? -timeDiff : timeDiff;
+    const idDiff = a.id.localeCompare(b.id);
+    return sortOrder === "desc" ? -idDiff : idDiff;
+  });
+
+  const pnlSeries = sorted
+    .map((trade, index) => {
+      if (!Number.isFinite(trade.pnlAmount)) return null;
+      const date = new Date(trade.entryTime);
+      const label = labelMode === "index" ? String(index + 1) : formatDateLabel(date);
+      return {
+        id: trade.id,
+        date,
+        label,
+        pnl: trade.pnlAmount,
+      };
+    })
+    .filter((value): value is PnlSeriesPoint => Boolean(value));
+
+  return pnlSeries.map((point, index) => {
+    const windowStart = getWindowStart(index, windowSize);
+    const windowValues = pnlSeries.slice(windowStart, index + 1).map((entry) => entry.pnl);
+    if (!windowValues.length) {
+      return { x: point.label, id: point.id, value: null };
+    }
+
+    const wins = windowValues.filter((value) => value > 0);
+    const losses = windowValues.filter((value) => value < 0).map((value) => Math.abs(value));
+    const winRate = wins.length / windowValues.length;
+    const lossRate = losses.length / windowValues.length;
+    const avgWin = wins.length
+      ? wins.reduce((acc, value) => acc + value, 0) / wins.length
+      : 0;
+    const avgLoss = losses.length
+      ? losses.reduce((acc, value) => acc + value, 0) / losses.length
+      : 0;
+
+    return { x: point.label, id: point.id, value: (winRate * avgWin) - (lossRate * avgLoss) };
+  });
+}
+
 function resolveRMultiple(
   trade: TradeRiskInput,
   fallbackRiskPoints: number,
@@ -219,6 +415,11 @@ function getWindowStart(index: number, windowSize: number | null): number {
 function formatDateLabel(date: Date): string {
   const label = formatWallClockYmd(date);
   return label || "";
+}
+
+function isLossResult(result: string | null | undefined): boolean {
+  const normalized = String(result ?? "").trim().toLowerCase();
+  return normalized === "loss" || normalized === "lost";
 }
 
 function buildBuckets(edges: number[]): Array<{ min: number; max: number; label: string }> {
@@ -244,6 +445,11 @@ function buildBuckets(edges: number[]): Array<{ min: number; max: number; label:
 }
 
 function formatRiskValue(value: number): string {
+  if (Number.isInteger(value)) return String(value);
+  return value.toFixed(2).replace(/\.00$/, "");
+}
+
+function formatHistogramNumber(value: number): string {
   if (Number.isInteger(value)) return String(value);
   return value.toFixed(2).replace(/\.00$/, "");
 }

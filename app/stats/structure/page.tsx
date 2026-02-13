@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic";
 
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,8 @@ import { ensureTradeIdStorage } from "@/lib/trade-id-storage";
 
 export default async function StructureStatsPage() {
   await ensureTradeIdStorage();
+  const rollingAverageDocPath = path.join(process.cwd(), "Rolling_Average_R.md");
+  const rollingAverageDoc = await readFile(rollingAverageDocPath, "utf8").catch(() => "");
 
   const trades = await prisma.trade.findMany({
     orderBy: [{ entryTime: "asc" }, { id: "asc" }],
@@ -49,7 +53,7 @@ export default async function StructureStatsPage() {
             </Button>
           </div>
         </div>
-        <StructureStatsCharts trades={chartTrades} />
+        <StructureStatsCharts trades={chartTrades} rollingAverageDoc={rollingAverageDoc} />
       </div>
     </main>
   );

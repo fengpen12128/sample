@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { CircleHelpIcon } from "lucide-react";
+import Markdown from "markdown-to-jsx";
 import {
   Bar,
   BarChart,
@@ -17,19 +19,23 @@ import {
   Cell,
 } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   calculateDistributionComparison,
   calculateRollingAverageR,
-  calculateRollingWinLossRatio,
+  calculateRollingExpectedValueByPnl,
+  calculateRollingWinLossRatioByAbsolutePnl,
   normalizeRiskSeries,
   type TradeRiskInput,
 } from "@/lib/risk-stats";
 
 type StructureStatsChartsProps = {
   trades: TradeRiskInput[];
+  rollingAverageDoc: string;
 };
 
 const DEFAULT_RANGE_MIN = "-4";
@@ -38,7 +44,7 @@ const DEFAULT_BIN_COUNT = "40";
 const DEFAULT_WINDOW = "100";
 const DEFAULT_RISK_POINTS = "20";
 
-export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
+export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureStatsChartsProps) {
   const [windowInput, setWindowInput] = React.useState(DEFAULT_WINDOW);
   const [rangeMinInput, setRangeMinInput] = React.useState(DEFAULT_RANGE_MIN);
   const [rangeMaxInput, setRangeMaxInput] = React.useState(DEFAULT_RANGE_MAX);
@@ -75,8 +81,12 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
   );
 
   const winLossRatio = React.useMemo(
-    () => calculateRollingWinLossRatio(series, windowSize),
-    [series, windowSize],
+    () => calculateRollingWinLossRatioByAbsolutePnl(trades, windowSize, "index", "asc"),
+    [trades, windowSize],
+  );
+  const expectedValue = React.useMemo(
+    () => calculateRollingExpectedValueByPnl(trades, windowSize, "index", "asc"),
+    [trades, windowSize],
   );
 
   const pieData = React.useMemo(() => {
@@ -199,6 +209,9 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
       <Card className="border-zinc-800 bg-zinc-950/40">
         <CardHeader>
           <CardTitle>Rolling Average R</CardTitle>
+          <CardAction>
+            <RollingAverageInfoDialog rawMarkdown={rollingAverageDoc} />
+          </CardAction>
         </CardHeader>
         <CardContent className="relative">
           <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
@@ -317,6 +330,62 @@ export function StructureStatsCharts({ trades }: StructureStatsChartsProps) {
 
       <Card className="border-zinc-800 bg-zinc-950/40">
         <CardHeader>
+          <CardTitle>Expected Value (EV)</CardTitle>
+        </CardHeader>
+        <CardContent className="relative">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+            <div>EV = (WinRate x AvgWin) - (LossRate x AvgLoss)</div>
+          </div>
+          <div className="w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
+              <LineChart data={expectedValue} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <XAxis dataKey="x" tick={false} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const entry = payload[0];
+                    const rawValue = entry.value;
+                    const valueText = typeof rawValue === "number" ? rawValue.toFixed(2) : "N/A";
+                    const id = String((entry.payload as { id?: string }).id ?? "");
+                    return (
+                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                        <div className="font-medium">EV: {valueText}</div>
+                        {id ? (
+                          <a
+                            href={`/?id=${encodeURIComponent(id)}`}
+                            className="text-emerald-300 underline"
+                          >
+                            ID: {id}
+                          </a>
+                        ) : null}
+                      </div>
+                    );
+                  }}
+                />
+                <ReferenceLine
+                  y={0}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  ifOverflow="extendDomain"
+                  label={{ value: "Break-even", fill: "#f59e0b", fontSize: 11 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#22d3ee"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-zinc-800 bg-zinc-950/40">
+        <CardHeader>
           <CardTitle>Profit vs Loss Total (Recent N)</CardTitle>
         </CardHeader>
         <CardContent>
@@ -374,4 +443,127 @@ function parseNullableInt(value: string): number | null {
 function parseNumberWithFallback(value: string, fallback: number): number {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function RollingAverageInfoDialog({ rawMarkdown }: { rawMarkdown: string }) {
+  const formattedMarkdown = React.useMemo(
+    () => formatRollingAverageDoc(rawMarkdown),
+    [rawMarkdown],
+  );
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          className="size-7 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+          aria-label="Rolling Average R 指标说明"
+        >
+          <CircleHelpIcon className="size-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        showCloseButton={false}
+        className="h-[84vh] max-h-[90vh] w-[92vw] sm:w-[88vw] sm:max-w-6xl border border-zinc-700 bg-zinc-950 p-6 text-base leading-relaxed text-zinc-100 font-['SF_Pro_Rounded','Arial_Rounded_MT_Bold','Hiragino_Maru_Gothic_ProN','system-ui']"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-zinc-100">
+            Rolling Average R 指标说明
+          </DialogTitle>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <Markdown
+            options={{
+              forceBlock: true,
+              overrides: {
+                h1: { props: { className: "mb-3 text-2xl font-semibold text-zinc-100" } },
+                h2: { props: { className: "mb-2 mt-4 text-xl font-semibold text-zinc-100" } },
+                p: { props: { className: "mb-2 text-base text-zinc-200" } },
+                ul: { props: { className: "mb-2 list-disc pl-5 text-base text-zinc-200" } },
+                li: { props: { className: "my-1" } },
+                code: {
+                  props: {
+                    className: "rounded bg-zinc-900 px-2 py-1 text-sm text-zinc-100",
+                  },
+                },
+              },
+            }}
+          >
+            {formattedMarkdown}
+          </Markdown>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function formatRollingAverageDoc(rawMarkdown: string): string {
+  const source = rawMarkdown.trim();
+  if (!source) {
+    return "# Rolling Average R\n\n暂无指标说明内容。";
+  }
+
+  const lines = source.split(/\r?\n/).map((line) => line.trim());
+  const output: string[] = [];
+  let inFormula = false;
+
+  for (const line of lines) {
+    if (!line) {
+      if (output[output.length - 1] !== "") {
+        output.push("");
+      }
+      continue;
+    }
+
+    if (line === "\\[") {
+      inFormula = true;
+      continue;
+    }
+    if (line === "\\]") {
+      inFormula = false;
+      continue;
+    }
+
+    if (inFormula) {
+      output.push("`Rolling Average R = (R1 + R2 + ... + RN) / N`");
+      continue;
+    }
+
+    if (line.startsWith("指标名称：")) {
+      output.push(`# ${line.replace("指标名称：", "").trim()}`);
+      continue;
+    }
+    if (line === "计算方式：") {
+      output.push("## 计算方式");
+      continue;
+    }
+    if (line === "反映的长期意义：") {
+      output.push("## 指标作用");
+      continue;
+    }
+    if (line === "合理数值范围参考：") {
+      output.push("## 参考范围");
+      continue;
+    }
+    if (line === "局限性：") {
+      output.push("## 局限性");
+      continue;
+    }
+
+    if (
+      line.includes("→") ||
+      line.startsWith("0.1R") ||
+      line.startsWith("0.5R") ||
+      line.startsWith("0R")
+    ) {
+      output.push(`- ${line}`);
+      continue;
+    }
+
+    output.push(line);
+  }
+
+  return output.join("\n").replace(/\n{3,}/g, "\n\n");
 }

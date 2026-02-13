@@ -16,6 +16,7 @@ export default async function StatsPage() {
       id: true,
       entryTime: true,
       direction: true,
+      result: true,
       entryPoint: true,
       closingPoint: true,
       slPoint: true,
