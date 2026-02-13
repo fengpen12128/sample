@@ -39,8 +39,8 @@ export default async function StructureStatsPage() {
       <div className="mx-auto w-full lg:w-[70%] max-w-none space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-zinc-100">Structure Stats</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-xl font-semibold text-foreground">Structure Stats</h1>
+            <p className="text-sm text-muted-foreground">
               System structure recognition against long-term baseline.
             </p>
           </div>

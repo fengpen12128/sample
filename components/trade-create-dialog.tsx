@@ -960,7 +960,7 @@ function TradeFormDialog({
                           <input
                             id="early-exit"
                             type="checkbox"
-                            className="h-4 w-4 rounded border border-zinc-700 bg-transparent text-emerald-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                            className="h-4 w-4 rounded-md border border-zinc-700 bg-transparent text-emerald-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                             checked={field.value}
                             onChange={(event) => field.onChange(event.target.checked)}
                             onBlur={field.onBlur}
@@ -1046,7 +1046,7 @@ function TradeFormDialog({
                             {screenshotUrls.map((url, index) => (
                               <div
                                 key={`${url}-${index}`}
-                                className="overflow-hidden rounded border border-zinc-800 bg-zinc-900/40"
+                                className="overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/40"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
@@ -1166,7 +1166,7 @@ function TradeFormDialog({
                 <img
                   src={aiPreviewUrl}
                   alt="preview"
-                  className="h-32 w-full rounded border border-zinc-800 object-cover"
+                  className="h-32 w-full rounded-md border border-zinc-800 object-cover"
                 />
               ) : null}
               {aiError ? <p className="text-xs text-red-400">{aiError}</p> : null}

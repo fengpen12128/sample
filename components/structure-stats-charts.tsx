@@ -123,14 +123,14 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
 
   return (
     <div className="space-y-6">
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Structure Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Recent window (N)</Label>
+              <Label className="text-xs text-muted-foreground">Recent window (N)</Label>
               <Input
                 value={windowInput}
                 onChange={(event) => setWindowInput(event.target.value)}
@@ -139,7 +139,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Histogram min (R)</Label>
+              <Label className="text-xs text-muted-foreground">Histogram min (R)</Label>
               <Input
                 value={rangeMinInput}
                 onChange={(event) => setRangeMinInput(event.target.value)}
@@ -148,7 +148,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Histogram max (R)</Label>
+              <Label className="text-xs text-muted-foreground">Histogram max (R)</Label>
               <Input
                 value={rangeMaxInput}
                 onChange={(event) => setRangeMaxInput(event.target.value)}
@@ -157,7 +157,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Bin count</Label>
+              <Label className="text-xs text-muted-foreground">Bin count</Label>
               <Input
                 value={binCountInput}
                 onChange={(event) => setBinCountInput(event.target.value)}
@@ -166,7 +166,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Risk points</Label>
+              <Label className="text-xs text-muted-foreground">Risk points</Label>
               <Input
                 value={fallbackRiskInput}
                 onChange={(event) => setFallbackRiskInput(event.target.value)}
@@ -178,7 +178,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>R Distribution Comparison</CardTitle>
         </CardHeader>
@@ -206,7 +206,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Rolling Average R</CardTitle>
           <CardAction>
@@ -214,7 +214,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
           </CardAction>
         </CardHeader>
         <CardContent className="relative">
-          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-muted-foreground">
             <div>Healthy zone ≥ +0.15R</div>
             <div>Ideal zone +0.20R ~ +0.30R</div>
           </div>
@@ -236,12 +236,12 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
                       typeof rawValue === "number" ? `${rawValue.toFixed(2)}R` : "N/A";
                     const id = String((entry.payload as { id?: string }).id ?? "");
                     return (
-                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                      <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs text-popover-foreground shadow-lg">
                         <div className="font-medium">Rolling avg: {valueText}</div>
                         {id ? (
                           <a
                             href={`/?id=${encodeURIComponent(id)}`}
-                            className="text-emerald-300 underline"
+                            className="text-primary underline"
                           >
                             ID: {id}
                           </a>
@@ -271,12 +271,12 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Win R / Loss R Ratio</CardTitle>
         </CardHeader>
         <CardContent className="relative">
-          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-muted-foreground">
             <div>Ideal zone 1.20 ~ 1.50</div>
           </div>
           <div className="w-full min-w-0">
@@ -293,12 +293,12 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
                     const valueText = typeof rawValue === "number" ? rawValue.toFixed(2) : "N/A";
                     const id = String((entry.payload as { id?: string }).id ?? "");
                     return (
-                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                      <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs text-popover-foreground shadow-lg">
                         <div className="font-medium">Win/Loss ratio: {valueText}</div>
                         {id ? (
                           <a
                             href={`/?id=${encodeURIComponent(id)}`}
-                            className="text-emerald-300 underline"
+                            className="text-primary underline"
                           >
                             ID: {id}
                           </a>
@@ -328,12 +328,12 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Expected Value (EV)</CardTitle>
         </CardHeader>
         <CardContent className="relative">
-          <div className="pointer-events-none absolute right-4 top-4 text-xs text-zinc-400">
+          <div className="pointer-events-none absolute right-4 top-4 text-xs text-muted-foreground">
             <div>EV = (WinRate x AvgWin) - (LossRate x AvgLoss)</div>
           </div>
           <div className="w-full min-w-0">
@@ -350,12 +350,12 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
                     const valueText = typeof rawValue === "number" ? rawValue.toFixed(2) : "N/A";
                     const id = String((entry.payload as { id?: string }).id ?? "");
                     return (
-                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                      <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs text-popover-foreground shadow-lg">
                         <div className="font-medium">EV: {valueText}</div>
                         {id ? (
                           <a
                             href={`/?id=${encodeURIComponent(id)}`}
-                            className="text-emerald-300 underline"
+                            className="text-primary underline"
                           >
                             ID: {id}
                           </a>
@@ -384,7 +384,7 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Profit vs Loss Total (Recent N)</CardTitle>
         </CardHeader>
@@ -400,9 +400,9 @@ export function StructureStatsCharts({ trades, rollingAverageDoc }: StructureSta
                     const percent =
                       pieTotal > 0 ? `${((rawValue / pieTotal) * 100).toFixed(1)}%` : "0%";
                     return (
-                      <div className="rounded-md border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs text-zinc-100 shadow-lg">
+                      <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs text-popover-foreground shadow-lg">
                         <div className="font-medium">{entry.name ?? "Total"}</div>
-                        <div className="text-zinc-200">
+                        <div className="text-foreground">
                           {rawValue.toFixed(2)} ({percent})
                         </div>
                       </div>
@@ -458,7 +458,7 @@ function RollingAverageInfoDialog({ rawMarkdown }: { rawMarkdown: string }) {
           type="button"
           size="icon-sm"
           variant="ghost"
-          className="size-7 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+          className="size-7 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
           aria-label="Rolling Average R 指标说明"
         >
           <CircleHelpIcon className="size-4" />
@@ -466,10 +466,10 @@ function RollingAverageInfoDialog({ rawMarkdown }: { rawMarkdown: string }) {
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        className="h-[84vh] max-h-[90vh] w-[92vw] sm:w-[88vw] sm:max-w-6xl border border-zinc-700 bg-zinc-950 p-6 text-base leading-relaxed text-zinc-100 font-['SF_Pro_Rounded','Arial_Rounded_MT_Bold','Hiragino_Maru_Gothic_ProN','system-ui']"
+        className="h-[84vh] max-h-[90vh] w-[92vw] sm:w-[88vw] sm:max-w-6xl border border-border bg-card p-6 text-base leading-relaxed text-card-foreground font-['SF_Pro_Rounded','Arial_Rounded_MT_Bold','Hiragino_Maru_Gothic_ProN','system-ui']"
       >
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-zinc-100">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             Rolling Average R 指标说明
           </DialogTitle>
         </DialogHeader>
@@ -478,14 +478,14 @@ function RollingAverageInfoDialog({ rawMarkdown }: { rawMarkdown: string }) {
             options={{
               forceBlock: true,
               overrides: {
-                h1: { props: { className: "mb-3 text-2xl font-semibold text-zinc-100" } },
-                h2: { props: { className: "mb-2 mt-4 text-xl font-semibold text-zinc-100" } },
-                p: { props: { className: "mb-2 text-base text-zinc-200" } },
-                ul: { props: { className: "mb-2 list-disc pl-5 text-base text-zinc-200" } },
+                h1: { props: { className: "mb-3 text-2xl font-semibold text-foreground" } },
+                h2: { props: { className: "mb-2 mt-4 text-xl font-semibold text-foreground" } },
+                p: { props: { className: "mb-2 text-base text-foreground" } },
+                ul: { props: { className: "mb-2 list-disc pl-5 text-base text-foreground" } },
                 li: { props: { className: "my-1" } },
                 code: {
                   props: {
-                    className: "rounded bg-zinc-900 px-2 py-1 text-sm text-zinc-100",
+                    className: "rounded bg-background px-2 py-1 text-sm text-foreground",
                   },
                 },
               },

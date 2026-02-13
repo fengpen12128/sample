@@ -36,8 +36,8 @@ export default async function StatsPage() {
       <div className="mx-auto w-full lg:w-[70%] max-w-none space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-zinc-100">Risk Stats</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-xl font-semibold text-foreground">Risk Stats</h1>
+            <p className="text-sm text-muted-foreground">
               Daily self-check for left-tail risk control.
             </p>
           </div>

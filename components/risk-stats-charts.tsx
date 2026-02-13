@@ -71,14 +71,14 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Risk Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Rolling max window (fixed)</Label>
+              <Label className="text-xs text-muted-foreground">Rolling max window (fixed)</Label>
               <Input
                 value="20"
                 placeholder="20"
@@ -88,7 +88,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Bottom 10% window (fixed)</Label>
+              <Label className="text-xs text-muted-foreground">Bottom 10% window (fixed)</Label>
               <Input
                 value="30"
                 placeholder="30"
@@ -98,7 +98,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Histogram window (fixed)</Label>
+              <Label className="text-xs text-muted-foreground">Histogram window (fixed)</Label>
               <Input
                 value="100"
                 placeholder="100"
@@ -108,7 +108,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Loss threshold (|PnL|)</Label>
+              <Label className="text-xs text-muted-foreground">Loss threshold (|PnL|)</Label>
               <Input
                 value={thresholdInput}
                 onChange={(event) => setThresholdInput(event.target.value)}
@@ -118,7 +118,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Loss buckets (fixed)</Label>
+              <Label className="text-xs text-muted-foreground">Loss buckets (fixed)</Label>
               <Input
                 value="0-10, 10-20, ..., 90-100"
                 className="h-8 text-xs"
@@ -126,7 +126,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Histogram bins</Label>
+              <Label className="text-xs text-muted-foreground">Histogram bins</Label>
               <Input
                 value="10 bins x 10"
                 className="h-8 text-xs"
@@ -137,7 +137,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Rolling Max Loss</CardTitle>
         </CardHeader>
@@ -178,7 +178,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Bottom 10% Loss Average</CardTitle>
         </CardHeader>
@@ -212,7 +212,7 @@ export function RiskStatsCharts({ trades }: RiskStatsChartsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-950/40">
+      <Card className="rounded-md border-border bg-card/70">
         <CardHeader>
           <CardTitle>Loss Distribution</CardTitle>
         </CardHeader>

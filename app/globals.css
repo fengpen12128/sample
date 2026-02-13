@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, .hyperdash *));
 
 @theme inline {
   --color-background: var(--background);
@@ -116,12 +116,136 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.hyperdash {
+  --background: oklch(0.18 0.01 45.2);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.2 0.01 45.2);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.2 0.01 45.2);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.67 0.23 43.8);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.26 0.01 45.2);
+  --secondary-foreground: oklch(0.91 0.01 45.2);
+  --muted: oklch(0.2 0.01 45.2);
+  --muted-foreground: oklch(0.65 0.01 45.2);
+  --accent: oklch(0.26 0.01 45.2);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.52 0.19 18.4);
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.58 0.21 38.5);
+  --chart-1: oklch(0.66 0.13 161.6);
+  --chart-2: oklch(0.52 0.19 18.4);
+  --chart-3: oklch(0.58 0.21 38.5);
+  --chart-4: oklch(0.65 0.12 248);
+  --chart-5: oklch(0.87 0.16 95.3);
+  --sidebar: oklch(0.18 0.01 45.2);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.67 0.23 43.8);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.2 0.01 45.2);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 14%);
+  --sidebar-ring: oklch(0.58 0.21 38.5);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+.hyperdash body {
+  background:
+    radial-gradient(90rem 45rem at 12% -15%, rgb(253 94 50 / 12%), transparent 58%),
+    radial-gradient(70rem 38rem at 90% -20%, rgb(255 255 255 / 4%), transparent 60%),
+    radial-gradient(70rem 40rem at 45% 130%, rgb(0 0 0 / 28%), transparent 68%),
+    var(--background);
+}
+
+@layer components {
+  .hyperdash [data-slot="button"]:not([data-variant="link"]) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 8px;
+    border-color: transparent;
+    background-color: rgb(255 255 255 / 3%);
+    color: var(--muted-foreground);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 16%),
+      inset 0 1px 0 rgb(255 255 255 / 10%);
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 120ms ease;
+  }
+
+  .hyperdash [data-slot="button"]:not([data-variant="link"])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background: linear-gradient(180deg, rgb(255 255 255 / 8%) 0%, rgb(255 255 255 / 2%) 100%) border-box;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+
+  .hyperdash [data-slot="button"]:not([data-variant="link"]) > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hyperdash [data-slot="button"][data-variant="default"],
+  .hyperdash [data-slot="button"][data-variant="outline"],
+  .hyperdash [data-slot="button"][data-variant="secondary"],
+  .hyperdash [data-slot="button"][data-variant="ghost"],
+  .hyperdash [data-slot="button"][data-variant="destructive"] {
+    background-color: rgb(255 255 255 / 3%);
+    color: var(--muted-foreground);
+  }
+
+  .hyperdash [data-slot="button"][data-variant="default"]:hover:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="outline"]:hover:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="secondary"]:hover:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="ghost"]:hover:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="destructive"]:hover:not(:disabled) {
+    background-color: rgb(255 255 255 / 10%);
+    color: var(--foreground);
+  }
+
+  .hyperdash [data-slot="button"][data-variant="default"]:active:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="outline"]:active:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="secondary"]:active:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="ghost"]:active:not(:disabled),
+  .hyperdash [data-slot="button"][data-variant="destructive"]:active:not(:disabled) {
+    background-color: rgb(255 255 255 / 14%);
+  }
+
+  .hyperdash [data-slot="button"]:not([data-variant="link"]):active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .hyperdash [data-slot="button"]:not([data-variant="link"]):disabled {
+    border-color: rgb(255 255 255 / 6%);
+    background-color: rgb(255 255 255 / 5%);
+    color: rgb(255 255 255 / 42%);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 10%);
   }
 }
 

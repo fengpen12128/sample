@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -101,7 +101,7 @@ function ScreenshotCarousel({
 
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
-      <div className="h-full w-full overflow-hidden rounded-md border border-zinc-800 bg-black/30">
+      <div className="h-full w-full overflow-hidden rounded-md border border-border bg-card/60">
         <img
           src={currentUrl}
           alt={`Trade ${tradeId} screenshot ${index + 1}`}
@@ -131,7 +131,7 @@ function ScreenshotCarousel({
           >
             <ChevronRightIcon className="size-4" />
           </Button>
-          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/55 px-2 py-1 text-[11px] text-zinc-100">
+          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-md border border-border bg-background/85 px-2 py-1 text-[11px] text-foreground">
             {index + 1} / {urls.length}
           </div>
         </>
@@ -164,13 +164,13 @@ function PineScriptDialog({ trade }: { trade: StreamTrade }) {
         <DialogHeader>
           <DialogTitle>Pine Script</DialogTitle>
         </DialogHeader>
-        <div className="rounded-md border border-zinc-800 bg-black/30 p-4">
+        <div className="rounded-md border border-border bg-card/70 p-4">
           <div className="relative">
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="absolute right-0 top-0 text-zinc-300 hover:bg-transparent hover:text-zinc-100"
+              className="absolute right-0 top-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
               aria-label="Copy script"
               onClick={async () => {
                 await navigator.clipboard.writeText(pineScript);
@@ -186,7 +186,7 @@ function PineScriptDialog({ trade }: { trade: StreamTrade }) {
             >
               {copied ? <CheckIcon /> : <CopyIcon />}
             </Button>
-            <pre className="whitespace-pre-wrap pr-10 text-xs text-zinc-100">
+            <pre className="whitespace-pre-wrap pr-10 text-xs text-foreground">
               {pineScript}
             </pre>
           </div>
@@ -300,9 +300,9 @@ function ScreenshotUploadPlaceholder({
       />
       <label
         htmlFor={inputId}
-        className="flex h-full min-h-0 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 bg-black/30 px-4 py-3 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+        className="flex h-full min-h-0 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/60 px-4 py-3 text-xs text-muted-foreground transition hover:border-foreground/35 hover:text-foreground"
       >
-        <span className="text-sm font-medium text-zinc-200">
+        <span className="text-sm font-medium text-foreground">
           {uploading ? "Uploading..." : "Click to upload screenshot(s)"}
         </span>
         <span>PNG / JPG / JPEG, multiple supported</span>
@@ -559,14 +559,14 @@ export default function StreamPage() {
       <div className="mx-auto w-full max-w-[1120px]">
         <div className="mb-6 snap-start">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-lg font-semibold text-zinc-100 sm:text-xl">Infinite Stream</h1>
+            <h1 className="text-lg font-semibold text-foreground sm:text-xl">Infinite Stream</h1>
             <Button asChild size="sm" variant="outline">
               <Link href="/">Back to Table</Link>
             </Button>
           </div>
 
-          <Card size="sm" className="mt-4 border-zinc-800 bg-zinc-950/40">
-            <CardHeader className="border-b border-zinc-800">
+          <Card size="sm" className="mt-4 rounded-md border-border bg-card/70">
+            <CardHeader className="border-b border-border">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle>Search</CardTitle>
                 <Button
@@ -589,7 +589,7 @@ export default function StreamPage() {
             <CardContent className="overflow-x-auto">
               <div className="grid min-w-[920px] grid-cols-5 gap-[5px]">
                 <div className="space-y-1">
-                  <Label className="text-xs text-zinc-400">Trade mode</Label>
+                  <Label className="text-xs text-muted-foreground">Trade mode</Label>
                   <Select value={tradeModeFilter} onValueChange={setTradeModeFilter}>
                     <SelectTrigger className="h-8 w-full text-xs">
                       <SelectValue placeholder="All" />
@@ -605,7 +605,7 @@ export default function StreamPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-zinc-400">Direction</Label>
+                  <Label className="text-xs text-muted-foreground">Direction</Label>
                   <Select value={directionFilter} onValueChange={setDirectionFilter}>
                     <SelectTrigger className="h-8 w-full text-xs">
                       <SelectValue placeholder="All" />
@@ -621,7 +621,7 @@ export default function StreamPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-zinc-400">Result</Label>
+                  <Label className="text-xs text-muted-foreground">Result</Label>
                   <Select value={resultFilter} onValueChange={setResultFilter}>
                     <SelectTrigger className="h-8 w-full text-xs">
                       <SelectValue placeholder="All" />
@@ -637,7 +637,7 @@ export default function StreamPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-zinc-400">Trade platform</Label>
+                  <Label className="text-xs text-muted-foreground">Trade platform</Label>
                   <Select value={tradePlatformFilter} onValueChange={setTradePlatformFilter}>
                     <SelectTrigger className="h-8 w-full text-xs">
                       <SelectValue placeholder="All" />
@@ -653,12 +653,11 @@ export default function StreamPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-zinc-400">Entry date</Label>
-                  <Input
-                    type="date"
+                  <Label className="text-xs text-muted-foreground">Entry date</Label>
+                  <DatePickerInput
                     value={entryDateFilter}
-                    onChange={(event) => setEntryDateFilter(event.target.value)}
-                    className="h-8 text-xs"
+                    onChange={setEntryDateFilter}
+                    ariaLabel="Entry date"
                   />
                 </div>
               </div>
@@ -674,7 +673,7 @@ export default function StreamPage() {
 	              key={trade.id}
 	              className="h-[100dvh] snap-start snap-always py-4 sm:py-6"
 	            >
-	              <article className="relative flex h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950/40 p-3 text-left sm:h-[calc(100dvh-3rem)] sm:p-4">
+	              <article className="relative flex h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-md border border-border bg-card/70 p-3 text-left sm:h-[calc(100dvh-3rem)] sm:p-4">
                 <div className="mb-3 flex flex-wrap items-center justify-start gap-2 sm:absolute sm:right-3 sm:top-3 sm:mb-0 sm:justify-end">
                   <PostReviewHoverButton value={trade.entryReason} />
                   <PineScriptDialog trade={trade} />
@@ -691,52 +690,46 @@ export default function StreamPage() {
 	                    }
 	                  />
 	                </div>
-	                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-zinc-400 sm:pr-64">
+	                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-muted-foreground sm:pr-64">
 	                  <span>Trade #{trade.id}</span>
 	                  <span>{formatDateTime(trade.entryTime)}</span>
 	                </div>
-                <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs text-zinc-200 sm:flex-wrap sm:overflow-visible sm:pb-0">
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs text-foreground sm:flex-wrap sm:overflow-visible sm:pb-0">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     {trade.symbol}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     {trade.direction}
                   </span>
                   <span
-                    className={`shrink-0 rounded-full border px-2 py-1 ${
-                      trade.result.toLowerCase() === "win"
-                        ? "border-emerald-600/50 bg-emerald-600/20 text-emerald-200"
-                        : trade.result.toLowerCase() === "loss"
-                          ? "border-red-600/50 bg-red-600/20 text-red-200"
-                          : "border-zinc-800 bg-zinc-900/50 text-zinc-200"
-                    }`}
+                    className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1"
                   >
                     {trade.result}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     Mode: {trade.tradeMode}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     {trade.tradePlatform ?? "—"}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     PnL: {trade.pnlAmount}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     Entry Point: {trade.entryPoint}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     Exit Point: {trade.closingPoint}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     Entry: {formatDateTime(trade.entryTime)}
                   </span>
-                  <span className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/50 px-2 py-1">
+                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                     Exit: {formatDateTime(trade.exitTime)}
                   </span>
                 </div>
 
-                <div className="mt-3 flex min-h-0 flex-1 flex-col border-t border-zinc-800 pt-3 sm:mt-4 sm:pt-4">
+                <div className="mt-3 flex min-h-0 flex-1 flex-col border-t border-border pt-3 sm:mt-4 sm:pt-4">
                   {screenshotUrls.length ? (
                     <ScreenshotCarousel
                       urls={screenshotUrls}
@@ -763,14 +756,14 @@ export default function StreamPage() {
             })}
 
           {error ? (
-            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+            <div className="rounded-md border border-border bg-card/70 p-3 text-sm text-destructive">
               {error}
             </div>
           ) : null}
 
           <div ref={sentinelRef} className="h-1" />
 
-          <div className="text-center text-xs text-zinc-500">
+          <div className="text-center text-xs text-muted-foreground">
             {loading
               ? "Loading..."
               : hasMore

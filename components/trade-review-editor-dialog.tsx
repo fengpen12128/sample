@@ -94,14 +94,14 @@ export function TradeReviewEditorDialog({
 
       <DialogContent
         showCloseButton={false}
-        className="fixed !inset-0 !left-0 !top-0 h-[100svh] w-[100vw] !max-w-none sm:!max-w-none !translate-x-0 !translate-y-0 rounded-none bg-transparent p-0 ring-0 gap-0 overflow-hidden"
+        className="fixed !inset-0 !left-0 !top-0 h-[100svh] w-[100vw] !max-w-none sm:!max-w-none !translate-x-0 !translate-y-0 rounded-md bg-transparent p-0 ring-0 gap-0 overflow-hidden"
         overlayClassName="bg-black/30 supports-backdrop-filter:backdrop-blur-2xl supports-backdrop-filter:saturate-150"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>{`Edit review: Trade #${tradeId}`}</DialogTitle>
         </DialogHeader>
 
-        <LiquidGlass className="h-full w-full rounded-none">
+        <LiquidGlass className="h-full w-full rounded-md">
           <div className="flex h-full w-full">
             <div className="relative flex h-full basis-4/5 items-center justify-center bg-black/20 p-4">
               {currentScreenshot ? (

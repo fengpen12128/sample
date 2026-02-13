@@ -8,12 +8,12 @@ import { TradeExportAllButton } from "@/components/trade-export-all";
 import { TradeCreateDialog, type TradeEditable } from "@/components/trade-create-dialog";
 import { TradeRowActions } from "@/components/trade-row-actions";
 import { Button } from "@/components/ui/button";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -211,17 +211,13 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto w-full lg:w-[70%] max-w-none">
-        <div className="mb-3 flex items-center justify-end gap-2">
+    <main className="h-[100dvh] overflow-hidden bg-background px-4 pt-6">
+      <div className="mx-auto flex h-full w-full max-w-none flex-col lg:w-[70%]">
+        <div className="mb-3 shrink-0 flex items-center justify-end gap-2">
           <ModeToggle />
           <TradeCreateDialog onSaved={refreshAppliedSearch} />
           <TradeExportAllButton trades={exportTrades} />
-          <Button
-            asChild
-            size="sm"
-            className="bg-emerald-600 text-white hover:bg-emerald-500"
-          >
+          <Button asChild size="sm" variant="outline">
             <Link href="/stream" target="_blank" rel="noreferrer">
               Infinite Stream
             </Link>
@@ -237,74 +233,74 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
             </Link>
           </Button>
         </div>
-        <div className="mb-4 rounded-lg border border-zinc-900 bg-zinc-950/30 px-4 py-3">
+        <div className="mb-4 shrink-0 rounded-md border border-border bg-card/70 px-4 py-3">
           <form className="space-y-3" onSubmit={handleSubmit}>
             <div className="grid gap-3 sm:grid-cols-5">
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Result</Label>
+                <Label className="text-xs text-muted-foreground">Result</Label>
                 <select
                   name="result"
                   value={filters.result}
                   onChange={(event) =>
                     setFilters((prev) => ({ ...prev, result: event.target.value }))
                   }
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all" className="bg-zinc-900 text-zinc-100">
+                  <option value="all" className="bg-popover text-popover-foreground">
                     All
                   </option>
-                  <option value="win" className="bg-zinc-900 text-zinc-100">
+                  <option value="win" className="bg-popover text-popover-foreground">
                     Win
                   </option>
-                  <option value="loss" className="bg-zinc-900 text-zinc-100">
+                  <option value="loss" className="bg-popover text-popover-foreground">
                     Loss
                   </option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Trade platform</Label>
+                <Label className="text-xs text-muted-foreground">Trade platform</Label>
                 <select
                   name="tradePlatform"
                   value={filters.tradePlatform}
                   onChange={(event) =>
                     setFilters((prev) => ({ ...prev, tradePlatform: event.target.value }))
                   }
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all" className="bg-zinc-900 text-zinc-100">
+                  <option value="all" className="bg-popover text-popover-foreground">
                     All
                   </option>
-                  <option value="Bybit" className="bg-zinc-900 text-zinc-100">
+                  <option value="Bybit" className="bg-popover text-popover-foreground">
                     Bybit
                   </option>
-                  <option value="Pepperstone" className="bg-zinc-900 text-zinc-100">
+                  <option value="Pepperstone" className="bg-popover text-popover-foreground">
                     Pepperstone
                   </option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Live mode</Label>
+                <Label className="text-xs text-muted-foreground">Live mode</Label>
                 <select
                   name="tradeMode"
                   value={filters.tradeMode}
                   onChange={(event) =>
                     setFilters((prev) => ({ ...prev, tradeMode: event.target.value }))
                   }
-                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-zinc-100 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-8 w-full rounded-md border border-input bg-transparent px-3 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="all" className="bg-zinc-900 text-zinc-100">
+                  <option value="all" className="bg-popover text-popover-foreground">
                     All
                   </option>
-                  <option value="live" className="bg-zinc-900 text-zinc-100">
+                  <option value="live" className="bg-popover text-popover-foreground">
                     Live
                   </option>
-                  <option value="demo" className="bg-zinc-900 text-zinc-100">
+                  <option value="demo" className="bg-popover text-popover-foreground">
                     Demo
                   </option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">ID</Label>
+                <Label className="text-xs text-muted-foreground">ID</Label>
                 <Input
                   name="id"
                   value={filters.id}
@@ -316,15 +312,14 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Entry date</Label>
-                <Input
+                <Label className="text-xs text-muted-foreground">Entry date</Label>
+                <DatePickerInput
                   name="entryDate"
-                  type="date"
                   value={filters.entryDate}
-                  onChange={(event) =>
-                    setFilters((prev) => ({ ...prev, entryDate: event.target.value }))
+                  onChange={(nextValue) =>
+                    setFilters((prev) => ({ ...prev, entryDate: nextValue }))
                   }
-                  className="h-8 text-xs"
+                  ariaLabel="Entry date"
                 />
               </div>
             </div>
@@ -346,85 +341,86 @@ export function HomeTableClient({ initialTrades }: { initialTrades: HomeTradeIte
             </div>
           </form>
         </div>
-        <div className="relative">
-          {searching ? (
-            <div className="absolute inset-0 z-30 flex items-center justify-center rounded-lg border border-zinc-900 bg-zinc-950/65 backdrop-blur-[1px]">
-              <div className="flex items-center gap-2 text-xs text-zinc-200">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-400" />
-                Loading table...
+        <div className="relative mb-[10px] min-h-0 flex-1">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-md">
+              {searching ? (
+                <div className="absolute inset-0 z-30 flex items-center justify-center rounded-md border border-border bg-background/70 backdrop-blur-[1px]">
+                  <div className="flex items-center gap-2 text-xs text-foreground">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
+                    Loading table...
+                  </div>
+                </div>
+              ) : null}
+              <div className="h-full overflow-auto rounded-md">
+                <Table className="rounded-md border border-border bg-card/70 table-fixed">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky left-0 z-20 w-[70px] bg-card/95">
+                        Actions
+                      </TableHead>
+                      <TableHead className="w-[70px]">ID</TableHead>
+                      <TableHead className="w-[110px]">PnL amount</TableHead>
+                      <TableHead className="w-[120px]">Entry Point</TableHead>
+                      <TableHead className="w-[120px]">Exit Point</TableHead>
+                      <TableHead className="w-[110px]">Symbol</TableHead>
+                      <TableHead className="w-[90px]">Direction</TableHead>
+                      <TableHead className="w-[90px]">Result</TableHead>
+                      <TableHead className="w-[150px]">Entry time</TableHead>
+                      <TableHead className="w-[150px]">Exit time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
+                    {trades.map((trade) => (
+                      <TableRow key={trade.id}>
+                        <TableCell className="sticky left-0 z-10 whitespace-nowrap bg-card/95">
+                          <TradeRowActions
+                            trade={toEditableTrade(trade)}
+                            onSaved={refreshAppliedSearch}
+                          />
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          #{trade.id}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {trade.pnlAmount}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {trade.entryPoint}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {trade.closingPoint}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground truncate">
+                          {trade.symbol}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {trade.direction}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {trade.result}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {formatDateTime(trade.entryTime)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-foreground">
+                          {formatDateTime(trade.exitTime)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
-          ) : null}
-          <Table className="rounded-lg border border-zinc-900 bg-zinc-950/30 table-fixed">
-            <TableCaption>
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-zinc-500">
-                  {error ? (
-                    <span className="text-red-400">Error: {error}</span>
-                  ) : (
-                    <span>Showing {trades.length} trades.</span>
-                  )}
-                </div>
-              </div>
-            </TableCaption>
-
-            <TableHeader>
-              <TableRow>
-                <TableHead className="sticky left-0 z-20 w-[70px] bg-zinc-950/30">
-                  Actions
-                </TableHead>
-                <TableHead className="w-[70px]">ID</TableHead>
-                <TableHead className="w-[110px]">PnL amount</TableHead>
-                <TableHead className="w-[120px]">Entry Point</TableHead>
-                <TableHead className="w-[120px]">Exit Point</TableHead>
-                <TableHead className="w-[110px]">Symbol</TableHead>
-                <TableHead className="w-[90px]">Direction</TableHead>
-                <TableHead className="w-[90px]">Result</TableHead>
-                <TableHead className="w-[150px]">Entry time</TableHead>
-                <TableHead className="w-[150px]">Exit time</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {trades.map((trade) => (
-                <TableRow key={trade.id}>
-                  <TableCell className="sticky left-0 z-10 whitespace-nowrap bg-zinc-950/30">
-                    <TradeRowActions
-                      trade={toEditableTrade(trade)}
-                      onSaved={refreshAppliedSearch}
-                    />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-300">
-                    #{trade.id}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {trade.pnlAmount}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {trade.entryPoint}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {trade.closingPoint}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200 truncate">
-                    {trade.symbol}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {trade.direction}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {trade.result}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {formatDateTime(trade.entryTime)}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-zinc-200">
-                    {formatDateTime(trade.exitTime)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <div className="mt-2 shrink-0 text-xs text-muted-foreground">
+              {error ? (
+                <span className="text-destructive">Error: {error}</span>
+              ) : (
+                <span>Showing {trades.length} trades.</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </main>
