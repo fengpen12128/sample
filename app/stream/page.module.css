@@ -1,22 +1,77 @@
 .tradeSection {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .tradeArticle {
-  height: calc(100dvh - 1rem);
-  padding: 0.625rem;
+  height: calc(100dvh - 3rem);
+  padding: 1rem;
 }
 
 .tradeLayout {
   display: flex;
   min-height: 0;
   flex: 1;
+  flex-direction: column;
+}
+
+.metaPanel {
+  min-width: 0;
+}
+
+.actionsRow {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.actionsRow :global(button) {
+  width: auto;
+}
+
+.metaHeader {
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 16rem;
+}
+
+.metaTags {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  overflow-x: visible;
+  overflow-y: visible;
+  padding-bottom: 0;
+}
+
+.imagePanel {
+  min-width: 0;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.mobileLandscapeRoot .tradeSection {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.mobileLandscapeRoot .tradeArticle {
+  height: calc(100dvh - 1rem);
+  padding: 0.625rem;
+}
+
+.mobileLandscapeRoot .tradeLayout {
   flex-direction: row;
   gap: 0.75rem;
 }
 
-.metaPanel {
+.mobileLandscapeRoot .metaPanel {
   order: 2;
   display: flex;
   min-height: 0;
@@ -32,8 +87,8 @@
   padding: 0.5rem;
 }
 
-.actionsRow {
-  margin-bottom: 0;
+.mobileLandscapeRoot .actionsRow {
+  position: static;
   min-width: 0;
   flex-direction: column;
   align-items: stretch;
@@ -42,20 +97,21 @@
   gap: 0.375rem;
 }
 
-.actionsRow :global(button) {
+.mobileLandscapeRoot .actionsRow :global(button) {
   width: 100%;
   justify-content: flex-start;
 }
 
-.metaHeader {
+.mobileLandscapeRoot .metaHeader {
   margin-bottom: 0;
   min-width: 0;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
+  padding-right: 0;
 }
 
-.metaTags {
+.mobileLandscapeRoot .metaTags {
   min-height: 0;
   min-width: 0;
   flex: 1;
@@ -64,11 +120,12 @@
   gap: 0.375rem;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 0;
 }
 
-.imagePanel {
+.mobileLandscapeRoot .imagePanel {
   order: 1;
-  min-width: 0;
   flex: 1 1 80%;
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
 }

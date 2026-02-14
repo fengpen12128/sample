@@ -105,8 +105,8 @@ export async function GET(request: Request) {
   if (entryDateFilter) {
     andFilters.push({
       entryTime: {
-      gte: entryDateFilter.start,
-      lt: entryDateFilter.end,
+        gte: entryDateFilter.start,
+        lt: entryDateFilter.end,
       },
     });
   }

@@ -492,6 +492,7 @@ function cleanNum(value: number | null | undefined) {
 
 export default function StreamPage() {
   const [items, setItems] = React.useState<StreamTrade[]>([]);
+  const [isMobileHandset, setIsMobileHandset] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -543,6 +544,44 @@ export default function StreamPage() {
   React.useEffect(() => {
     entryDateFilterRef.current = entryDateFilter;
   }, [entryDateFilter]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ua = navigator.userAgent || "";
+    const isTabletUA = /ipad|tablet/i.test(ua);
+    const isPhoneUA =
+      /(android.+mobile|iphone|ipod|windows phone|blackberry|bb10|opera mini|mobile)/i.test(ua) &&
+      !isTabletUA;
+    const isTouchNarrowScreen =
+      !isTabletUA &&
+      navigator.maxTouchPoints > 0 &&
+      window.matchMedia("(max-width: 1024px)").matches;
+    setIsMobileHandset(isPhoneUA || isTouchNarrowScreen);
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isMobileHandset) return;
+
+    const orientation = window.screen?.orientation;
+    if (!orientation || typeof orientation.lock !== "function") return;
+
+    let shouldUnlock = false;
+    void orientation
+      .lock("landscape")
+      .then(() => {
+        shouldUnlock = true;
+      })
+      .catch(() => {
+        // Some browsers block orientation lock unless in fullscreen or installed PWA.
+      });
+
+    return () => {
+      if (shouldUnlock && typeof orientation.unlock === "function") {
+        orientation.unlock();
+      }
+    };
+  }, [isMobileHandset]);
 
   const loadMore = React.useCallback(async (overrideOffset?: number) => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -674,7 +713,9 @@ export default function StreamPage() {
   return (
     <main
       ref={scrollRootRef}
-      className="h-[100dvh] overflow-y-auto no-scrollbar bg-background snap-y snap-mandatory"
+      className={`h-[100dvh] overflow-y-auto no-scrollbar bg-background snap-y snap-mandatory ${
+        isMobileHandset ? styles.mobileLandscapeRoot : ""
+      }`}
       style={{
         paddingTop: "max(1rem, env(safe-area-inset-top))",
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
