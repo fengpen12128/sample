@@ -76,8 +76,8 @@
   display: flex;
   min-height: 0;
   min-width: 0;
-  flex: 0 0 10%;
-  max-width: 10%;
+  flex: 0 0 15%;
+  max-width: 15%;
   flex-direction: column;
   gap: 0.5rem;
   overflow-y: auto;
@@ -121,7 +121,7 @@
 
 .mobileLandscapeRoot .imagePanel {
   order: 1;
-  flex: 1 1 90%;
+  flex: 1 1 85%;
   margin-top: 0;
   border-top: 0;
   padding-top: 0;
