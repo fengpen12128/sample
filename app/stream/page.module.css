@@ -25,7 +25,7 @@
   max-width: 20%;
   flex-direction: column;
   gap: 0.5rem;
-  overflow: auto;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   background-color: var(--card);
@@ -34,22 +34,37 @@
 
 .actionsRow {
   margin-bottom: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.125rem;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 0.375rem;
+}
+
+.actionsRow :global(button) {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .metaHeader {
   margin-bottom: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.125rem;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
 .metaTags {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.125rem;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.375rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 0;
 }
 
 .imagePanel {

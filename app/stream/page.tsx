@@ -3,7 +3,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, CopyIcon, PencilIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CopyIcon,
+  PencilIcon,
+  XIcon,
+} from "lucide-react";
 import type { PutBlobResult } from "@vercel/blob";
 import { toast } from "sonner";
 import styles from "./page.module.css";
@@ -90,25 +97,56 @@ function ScreenshotCarousel({
   className?: string;
 }) {
   const [index, setIndex] = React.useState(0);
+  const [fullscreenOpen, setFullscreenOpen] = React.useState(false);
   const hasMany = urls.length > 1;
   const currentUrl = urls[index] ?? urls[0] ?? "";
   const urlKey = React.useMemo(() => urls.join(","), [urls]);
 
   React.useEffect(() => {
     setIndex(0);
+    setFullscreenOpen(false);
   }, [tradeId, urlKey]);
+
+  React.useEffect(() => {
+    if (!fullscreenOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullscreenOpen(false);
+      if (hasMany && event.key === "ArrowLeft") {
+        setIndex((prev) => offsetIndex(prev, urls.length, -1));
+      }
+      if (hasMany && event.key === "ArrowRight") {
+        setIndex((prev) => offsetIndex(prev, urls.length, 1));
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [fullscreenOpen, hasMany, urls.length]);
 
   if (!currentUrl) return null;
 
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div className="h-full w-full overflow-hidden rounded-md border border-border bg-card/60">
-        <img
-          src={currentUrl}
-          alt={`Trade ${tradeId} screenshot ${index + 1}`}
-          className="h-full w-full object-contain"
-          loading="lazy"
-        />
+        <button
+          type="button"
+          className="h-full w-full cursor-zoom-in"
+          onClick={() => setFullscreenOpen(true)}
+          aria-label="Open screenshot fullscreen"
+        >
+          <img
+            src={currentUrl}
+            alt={`Trade ${tradeId} screenshot ${index + 1}`}
+            className="h-full w-full object-contain"
+            loading="lazy"
+          />
+        </button>
       </div>
       {hasMany ? (
         <>
@@ -136,6 +174,72 @@ function ScreenshotCarousel({
             {index + 1} / {urls.length}
           </div>
         </>
+      ) : null}
+      {fullscreenOpen ? (
+        <div
+          className="fixed inset-0 z-[120] bg-black/95"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fullscreen screenshot viewer"
+          onClick={() => setFullscreenOpen(false)}
+        >
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="secondary"
+            className="absolute right-3 top-3 z-10"
+            onClick={(event) => {
+              event.stopPropagation();
+              setFullscreenOpen(false);
+            }}
+            aria-label="Close fullscreen screenshot"
+          >
+            <XIcon className="size-4" />
+          </Button>
+
+          {hasMany ? (
+            <>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="secondary"
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIndex((prev) => offsetIndex(prev, urls.length, -1));
+                }}
+                aria-label="Previous screenshot"
+              >
+                <ChevronLeftIcon className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="secondary"
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIndex((prev) => offsetIndex(prev, urls.length, 1));
+                }}
+                aria-label="Next screenshot"
+              >
+                <ChevronRightIcon className="size-4" />
+              </Button>
+              <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-md border border-white/20 bg-black/70 px-2 py-1 text-[11px] text-white">
+                {index + 1} / {urls.length}
+              </div>
+            </>
+          ) : null}
+
+          <div className="h-full w-full p-2" onClick={(event) => event.stopPropagation()}>
+            <img
+              src={currentUrl}
+              alt={`Trade ${tradeId} screenshot ${index + 1} fullscreen`}
+              className="h-full w-full object-contain"
+              loading="eager"
+            />
+          </div>
+        </div>
       ) : null}
     </div>
   );
@@ -395,6 +499,7 @@ export default function StreamPage() {
   const [directionFilter, setDirectionFilter] = React.useState("all");
   const [resultFilter, setResultFilter] = React.useState("all");
   const [tradePlatformFilter, setTradePlatformFilter] = React.useState("all");
+  const [hasScreenshotFilter, setHasScreenshotFilter] = React.useState("all");
   const [entryDateFilter, setEntryDateFilter] = React.useState("");
   const scrollRootRef = React.useRef<HTMLElement | null>(null);
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
@@ -407,11 +512,13 @@ export default function StreamPage() {
   const directionFilterRef = React.useRef(directionFilter);
   const resultFilterRef = React.useRef(resultFilter);
   const tradePlatformFilterRef = React.useRef(tradePlatformFilter);
+  const hasScreenshotFilterRef = React.useRef(hasScreenshotFilter);
   const entryDateFilterRef = React.useRef(entryDateFilter);
   const tradeModeOptions = ["all", "live", "demo"];
   const directionOptions = ["all", "long", "short"];
   const resultOptions = ["all", "win", "loss"];
   const tradePlatformOptions = ["all", "Bybit", "Pepperstone"];
+  const hasScreenshotOptions = ["all", "yes", "no"];
 
   React.useEffect(() => {
     tradeModeFilterRef.current = tradeModeFilter;
@@ -430,6 +537,10 @@ export default function StreamPage() {
   }, [tradePlatformFilter]);
 
   React.useEffect(() => {
+    hasScreenshotFilterRef.current = hasScreenshotFilter;
+  }, [hasScreenshotFilter]);
+
+  React.useEffect(() => {
     entryDateFilterRef.current = entryDateFilter;
   }, [entryDateFilter]);
 
@@ -444,12 +555,14 @@ export default function StreamPage() {
       const currentDirection = directionFilterRef.current;
       const currentResult = resultFilterRef.current;
       const currentTradePlatform = tradePlatformFilterRef.current;
+      const currentHasScreenshot = hasScreenshotFilterRef.current;
       const currentEntryDate = entryDateFilterRef.current.trim();
       const requestKey = [
         `mode=${currentTradeMode}`,
         `dir=${currentDirection}`,
         `result=${currentResult}`,
         `platform=${currentTradePlatform}`,
+        `hasScreenshot=${currentHasScreenshot}`,
         `entryDate=${currentEntryDate || "all"}`,
         `offset=${currentOffset}`,
       ].join("&");
@@ -471,6 +584,9 @@ export default function StreamPage() {
       }
       if (currentTradePlatform !== "all") {
         params.set("tradePlatform", currentTradePlatform);
+      }
+      if (currentHasScreenshot !== "all") {
+        params.set("hasScreenshot", currentHasScreenshot);
       }
       if (currentEntryDate) {
         params.set("entryDate", currentEntryDate);
@@ -522,13 +638,22 @@ export default function StreamPage() {
       `dir=${directionFilter}`,
       `result=${resultFilter}`,
       `platform=${tradePlatformFilter}`,
+      `hasScreenshot=${hasScreenshotFilter}`,
       `entryDate=${entryDateFilter.trim() || "all"}`,
       "offset=0",
     ].join("&");
     if (initialLoadKeys.has(initialKey)) return;
     initialLoadKeys.add(initialKey);
     void loadMore(0);
-  }, [directionFilter, entryDateFilter, loadMore, resultFilter, tradeModeFilter, tradePlatformFilter]);
+  }, [
+    directionFilter,
+    entryDateFilter,
+    hasScreenshotFilter,
+    loadMore,
+    resultFilter,
+    tradeModeFilter,
+    tradePlatformFilter,
+  ]);
 
   React.useEffect(() => {
     if (!hasMore) return;
@@ -580,6 +705,7 @@ export default function StreamPage() {
                     setDirectionFilter("all");
                     setResultFilter("all");
                     setTradePlatformFilter("all");
+                    setHasScreenshotFilter("all");
                     setEntryDateFilter("");
                   }}
                 >
@@ -588,7 +714,7 @@ export default function StreamPage() {
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <div className="grid min-w-[920px] grid-cols-5 gap-[5px]">
+              <div className="grid min-w-[1100px] grid-cols-6 gap-[5px]">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Trade mode</Label>
                   <Select value={tradeModeFilter} onValueChange={setTradeModeFilter}>
@@ -661,6 +787,22 @@ export default function StreamPage() {
                     ariaLabel="Entry date"
                   />
                 </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Has screenshot</Label>
+                  <Select value={hasScreenshotFilter} onValueChange={setHasScreenshotFilter}>
+                    <SelectTrigger className="h-8 w-full text-xs">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hasScreenshotOptions.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -672,15 +814,15 @@ export default function StreamPage() {
             return (
               <section
                 key={trade.id}
-                className={`h-[100dvh] snap-start snap-always py-4 ${styles.tradeSection}`}
+                className={`h-[100dvh] snap-start snap-always ${styles.tradeSection}`}
               >
                 <article
-                  className={`relative flex h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-md border border-border bg-card/70 p-3 text-left ${styles.tradeArticle}`}
+                  className={`relative flex w-full overflow-hidden rounded-md border border-border bg-card/70 text-left ${styles.tradeArticle}`}
                 >
                   <div className={styles.tradeLayout}>
                     <div className={styles.metaPanel}>
                       <div
-                        className={`flex flex-wrap items-center justify-start gap-2 ${styles.actionsRow}`}
+                        className={`flex ${styles.actionsRow}`}
                       >
                         <PostReviewHoverButton value={trade.entryReason} />
                         <PineScriptDialog trade={trade} />
@@ -699,14 +841,14 @@ export default function StreamPage() {
                       </div>
 
                       <div
-                        className={`flex items-center gap-2 text-xs text-muted-foreground ${styles.metaHeader}`}
+                        className={`flex text-xs text-muted-foreground ${styles.metaHeader}`}
                       >
                         <span>Trade #{trade.id}</span>
                         <span>{formatDateTime(trade.entryTime)}</span>
                       </div>
 
                       <div
-                        className={`no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs text-foreground ${styles.metaTags}`}
+                        className={`no-scrollbar flex text-xs text-foreground ${styles.metaTags}`}
                       >
                         <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
                           {trade.symbol}

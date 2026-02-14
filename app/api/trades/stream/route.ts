@@ -58,6 +58,7 @@ export async function GET(request: Request) {
   const directionRaw = searchParams.get("direction")?.trim();
   const tradeModeRaw = searchParams.get("tradeMode")?.trim();
   const tradePlatformRaw = searchParams.get("tradePlatform")?.trim();
+  const hasScreenshotRaw = searchParams.get("hasScreenshot")?.trim().toLowerCase();
   const idFilterRaw = searchParams.get("id");
   const entryDateRaw = searchParams.get("entryDate");
   const fetchAllRaw = searchParams.get("fetchAll");
@@ -74,26 +75,45 @@ export async function GET(request: Request) {
     tradePlatformRaw && tradePlatformRaw.toLowerCase() !== "all"
       ? tradePlatformRaw
       : null;
+  const hasScreenshotFilter =
+    hasScreenshotRaw === "yes" || hasScreenshotRaw === "no" ? hasScreenshotRaw : null;
   const entryDateFilter = parseDateOnlyParam(entryDateRaw);
 
-  const where: Prisma.TradeWhereInput = {};
-  if (resultFilter) where.result = { equals: resultFilter, mode: "insensitive" };
-  if (directionFilter) where.direction = { equals: directionFilter, mode: "insensitive" };
-  if (tradeModeFilter) where.tradeMode = { equals: tradeModeFilter, mode: "insensitive" };
+  const andFilters: Prisma.TradeWhereInput[] = [];
+  if (resultFilter) andFilters.push({ result: { equals: resultFilter, mode: "insensitive" } });
+  if (directionFilter) {
+    andFilters.push({ direction: { equals: directionFilter, mode: "insensitive" } });
+  }
+  if (tradeModeFilter) {
+    andFilters.push({ tradeMode: { equals: tradeModeFilter, mode: "insensitive" } });
+  }
   if (tradePlatformFilter) {
-    where.tradePlatform = { equals: tradePlatformFilter, mode: "insensitive" };
+    andFilters.push({ tradePlatform: { equals: tradePlatformFilter, mode: "insensitive" } });
+  }
+  if (hasScreenshotFilter === "yes") {
+    andFilters.push({ screenshotUrl: { not: null } });
+    andFilters.push({ screenshotUrl: { not: "" } });
+  }
+  if (hasScreenshotFilter === "no") {
+    andFilters.push({
+      OR: [{ screenshotUrl: null }, { screenshotUrl: "" }],
+    });
   }
   if (idFilter !== null) {
-    where.id = idFilter;
+    andFilters.push({ id: idFilter });
   }
   if (entryDateFilter) {
-    where.entryTime = {
+    andFilters.push({
+      entryTime: {
       gte: entryDateFilter.start,
       lt: entryDateFilter.end,
-    };
+      },
+    });
   }
 
-  const whereInput = Object.keys(where).length ? where : undefined;
+  const whereInput: Prisma.TradeWhereInput | undefined = andFilters.length
+    ? { AND: andFilters }
+    : undefined;
 
   const [items, total] = fetchAll
     ? await Promise.all([
