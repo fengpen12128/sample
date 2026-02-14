@@ -563,7 +563,22 @@ export default function StreamPage() {
     if (typeof window === "undefined") return;
     if (!isMobileHandset) return;
 
-    const orientation = window.screen?.orientation;
+    type ScreenOrientationWithLock = ScreenOrientation & {
+      lock?: (
+        orientation:
+          | "any"
+          | "natural"
+          | "landscape"
+          | "portrait"
+          | "portrait-primary"
+          | "portrait-secondary"
+          | "landscape-primary"
+          | "landscape-secondary",
+      ) => Promise<void>;
+      unlock?: () => void;
+    };
+
+    const orientation = window.screen?.orientation as ScreenOrientationWithLock | undefined;
     if (!orientation || typeof orientation.lock !== "function") return;
 
     let shouldUnlock = false;
