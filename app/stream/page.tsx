@@ -680,7 +680,7 @@ export default function StreamPage() {
                   <div className={styles.tradeLayout}>
                     <div className={styles.metaPanel}>
                       <div
-                        className={`mb-3 flex flex-wrap items-center justify-start gap-2 ${styles.actionsRow}`}
+                        className={`flex flex-wrap items-center justify-start gap-2 ${styles.actionsRow}`}
                       >
                         <PostReviewHoverButton value={trade.entryReason} />
                         <PineScriptDialog trade={trade} />
@@ -699,7 +699,7 @@ export default function StreamPage() {
                       </div>
 
                       <div
-                        className={`mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-muted-foreground ${styles.metaHeader}`}
+                        className={`flex items-center gap-2 text-xs text-muted-foreground ${styles.metaHeader}`}
                       >
                         <span>Trade #{trade.id}</span>
                         <span>{formatDateTime(trade.entryTime)}</span>
@@ -742,7 +742,7 @@ export default function StreamPage() {
                     </div>
 
                     <div
-                      className={`mt-3 flex min-h-0 flex-1 flex-col border-t border-border pt-3 ${styles.imagePanel}`}
+                      className={`flex min-h-0 flex-1 flex-col ${styles.imagePanel}`}
                     >
                       {screenshotUrls.length ? (
                         <ScreenshotCarousel
