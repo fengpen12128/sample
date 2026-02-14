@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, CopyIcon, PencilIcon } from "lucide-react";
 import type { PutBlobResult } from "@vercel/blob";
 import { toast } from "sonner";
+import styles from "./page.module.css";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -666,94 +667,108 @@ export default function StreamPage() {
         </div>
 
         <div className="space-y-0">
-	          {items.map((trade) => {
-              const screenshotUrls = splitScreenshotUrls(trade.screenshotUrl);
-              return (
-	            <section
-	              key={trade.id}
-	              className="h-[100dvh] snap-start snap-always py-4 sm:py-6"
-	            >
-	              <article className="relative flex h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-md border border-border bg-card/70 p-3 text-left sm:h-[calc(100dvh-3rem)] sm:p-4">
-                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 sm:absolute sm:right-3 sm:top-3 sm:mb-0 sm:justify-end">
-                  <PostReviewHoverButton value={trade.entryReason} />
-                  <PineScriptDialog trade={trade} />
-	                  <TradeReviewEditorDialog
-	                    tradeId={trade.id}
-	                    screenshotUrl={trade.screenshotUrl}
-	                    initialReview={trade.entryReason}
-	                    onSaved={handleReviewSaved}
-	                    trigger={
-	                      <Button type="button" size="sm" variant="secondary" className="gap-1.5">
-	                        <PencilIcon className="size-3.5" />
-	                        Review
-	                      </Button>
-	                    }
-	                  />
-	                </div>
-	                <div className="mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-muted-foreground sm:pr-64">
-	                  <span>Trade #{trade.id}</span>
-	                  <span>{formatDateTime(trade.entryTime)}</span>
-	                </div>
-                <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs text-foreground sm:flex-wrap sm:overflow-visible sm:pb-0">
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    {trade.symbol}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    {trade.direction}
-                  </span>
-                  <span
-                    className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1"
-                  >
-                    {trade.result}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    Mode: {trade.tradeMode}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    {trade.tradePlatform ?? "—"}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    PnL: {trade.pnlAmount}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    Entry Point: {trade.entryPoint}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    Exit Point: {trade.closingPoint}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    Entry: {formatDateTime(trade.entryTime)}
-                  </span>
-                  <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
-                    Exit: {formatDateTime(trade.exitTime)}
-                  </span>
-                </div>
+          {items.map((trade) => {
+            const screenshotUrls = splitScreenshotUrls(trade.screenshotUrl);
+            return (
+              <section
+                key={trade.id}
+                className={`h-[100dvh] snap-start snap-always py-4 ${styles.tradeSection}`}
+              >
+                <article
+                  className={`relative flex h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-md border border-border bg-card/70 p-3 text-left ${styles.tradeArticle}`}
+                >
+                  <div className={styles.tradeLayout}>
+                    <div className={styles.metaPanel}>
+                      <div
+                        className={`mb-3 flex flex-wrap items-center justify-start gap-2 ${styles.actionsRow}`}
+                      >
+                        <PostReviewHoverButton value={trade.entryReason} />
+                        <PineScriptDialog trade={trade} />
+                        <TradeReviewEditorDialog
+                          tradeId={trade.id}
+                          screenshotUrl={trade.screenshotUrl}
+                          initialReview={trade.entryReason}
+                          onSaved={handleReviewSaved}
+                          trigger={
+                            <Button type="button" size="sm" variant="secondary" className="gap-1.5">
+                              <PencilIcon className="size-3.5" />
+                              Review
+                            </Button>
+                          }
+                        />
+                      </div>
 
-                <div className="mt-3 flex min-h-0 flex-1 flex-col border-t border-border pt-3 sm:mt-4 sm:pt-4">
-                  {screenshotUrls.length ? (
-                    <ScreenshotCarousel
-                      urls={screenshotUrls}
-                      tradeId={trade.id}
-                      className="flex-1 min-h-0"
-                    />
-                  ) : (
-                    <ScreenshotUploadPlaceholder
-                      tradeId={trade.id}
-                      existingScreenshotUrl={trade.screenshotUrl}
-                      onUploaded={(value) => {
-                        setItems((prev) =>
-                          prev.map((item) =>
-                            item.id === trade.id ? { ...item, screenshotUrl: value } : item,
-                          ),
-                        );
-                      }}
-                    />
-                  )}
-                </div>
-              </article>
-            </section>
-              );
-            })}
+                      <div
+                        className={`mb-3 flex flex-wrap items-center justify-start gap-2 text-xs text-muted-foreground ${styles.metaHeader}`}
+                      >
+                        <span>Trade #{trade.id}</span>
+                        <span>{formatDateTime(trade.entryTime)}</span>
+                      </div>
+
+                      <div
+                        className={`no-scrollbar flex gap-2 overflow-x-auto pb-1 text-xs text-foreground ${styles.metaTags}`}
+                      >
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          {trade.symbol}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          {trade.direction}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          {trade.result}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          Mode: {trade.tradeMode}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          {trade.tradePlatform ?? "—"}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          PnL: {trade.pnlAmount}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          Entry Point: {trade.entryPoint}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          Exit Point: {trade.closingPoint}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          Entry: {formatDateTime(trade.entryTime)}
+                        </span>
+                        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1">
+                          Exit: {formatDateTime(trade.exitTime)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`mt-3 flex min-h-0 flex-1 flex-col border-t border-border pt-3 ${styles.imagePanel}`}
+                    >
+                      {screenshotUrls.length ? (
+                        <ScreenshotCarousel
+                          urls={screenshotUrls}
+                          tradeId={trade.id}
+                          className="min-h-0 flex-1"
+                        />
+                      ) : (
+                        <ScreenshotUploadPlaceholder
+                          tradeId={trade.id}
+                          existingScreenshotUrl={trade.screenshotUrl}
+                          onUploaded={(value) => {
+                            setItems((prev) =>
+                              prev.map((item) =>
+                                item.id === trade.id ? { ...item, screenshotUrl: value } : item,
+                              ),
+                            );
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </article>
+              </section>
+            );
+          })}
 
           {error ? (
             <div className="rounded-md border border-border bg-card/70 p-3 text-sm text-destructive">
