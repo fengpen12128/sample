@@ -14,7 +14,11 @@ function resolveSize(raw: string | null) {
 export function GET(request: NextRequest) {
   const size = resolveSize(request.nextUrl.searchParams.get("size"));
   const isMaskable = request.nextUrl.searchParams.get("maskable") === "1";
-  const inset = isMaskable ? Math.round(size * 0.2) : Math.round(size * 0.12);
+  const inset = isMaskable ? Math.round(size * 0.12) : 0;
+  const stroke = Math.max(2, Math.round(size * 0.0156));
+  const chartStroke = Math.max(4, Math.round(size * 0.039));
+  const chartPoint = Math.max(3, Math.round(size * 0.023));
+  const bigPoint = Math.max(4, Math.round(size * 0.031));
 
   return new ImageResponse(
     (
@@ -25,14 +29,8 @@ export function GET(request: NextRequest) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background:
-            "radial-gradient(circle at 20% 20%, #fb923c 0%, #f97316 34%, #1f2937 100%)",
-          color: "#f9fafb",
-          fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
-          fontWeight: 700,
-          fontSize: size * 0.28,
-          letterSpacing: size * 0.02,
-          lineHeight: 1,
+          background: "#0B0B0D",
+          borderRadius: size * 0.1875,
           padding: inset,
         }}
       >
@@ -43,12 +41,30 @@ export function GET(request: NextRequest) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: isMaskable ? size * 0.22 : size * 0.18,
-            border: `${Math.max(2, Math.round(size * 0.015))}px solid rgba(255,255,255,0.35)`,
-            background: "rgba(17, 24, 39, 0.42)",
+            borderRadius: size * 0.1875,
+            border: `${stroke}px solid #27272A`,
+            background: "#111827",
+            position: "relative",
           }}
         >
-          TS
+          <svg
+            width="72%"
+            height="72%"
+            viewBox="0 0 512 512"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M96 372L174 294L228 334L302 228L356 268"
+              stroke="#38BDF8"
+              strokeWidth={chartStroke}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="302" cy="228" r={bigPoint} fill="#F97316" />
+            <circle cx="174" cy="294" r={chartPoint} fill="#22C55E" />
+            <circle cx="356" cy="268" r={chartPoint} fill="#22C55E" />
+          </svg>
         </div>
       </div>
     ),

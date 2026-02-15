@@ -19,11 +19,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Trade Stream",
-    template: "%s | Trade Stream",
+    default: "Trade Records",
+    template: "%s | Trade Records",
   },
   description: "Track and review trade records with an infinite stream view.",
-  applicationName: "Trade Stream",
+  applicationName: "Trade Records",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Trade Stream",
+    title: "Trade Records",
   },
 };
 

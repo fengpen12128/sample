@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Trade Stream",
-    short_name: "TradeStream",
+    name: "Trade Records",
+    short_name: "Trade Records",
     description: "Track and review trade records with an infinite stream view.",
     start_url: "/",
     scope: "/",

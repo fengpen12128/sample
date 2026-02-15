@@ -1,5 +1,5 @@
-const STATIC_CACHE = "trade-stream-static-v1";
-const PAGE_CACHE = "trade-stream-pages-v1";
+const STATIC_CACHE = "trade-records-static-v2";
+const PAGE_CACHE = "trade-records-pages-v2";
 const OFFLINE_FALLBACK = "/offline.html";
 const PRECACHE_URLS = ["/", "/stream", OFFLINE_FALLBACK];
 
